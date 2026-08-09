@@ -1,0 +1,4 @@
+interface:
+  display_name: "Criar Skills"
+  short_description: "Crie skills locais, claras e validadas"
+  default_prompt: "Use $criar-skills para criar uma skill para este projeto."

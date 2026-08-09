@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#146c43" />
+    <meta name="description" content="Conferência de etiquetas de gôndula." />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icone.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>Gôndula Reader</title>
+  </head>
+  <body>
+    <main class="aplicativo" aria-live="polite">
+      <header class="cabecalho">
+        <div class="marca">
+          <span class="marca__icone" aria-hidden="true">✓</span>
+          <div>
+            <p class="marca__nome">Gôndula Reader</p>
+            <p class="marca__subtitulo">Conferência de etiquetas</p>
+          </div>
+        </div>
+        <button class="botao-icone" id="botao-sair" type="button" aria-label="Sair do modo de conferência">⌧</button>
+      </header>
+
+      <section class="aviso-demo" aria-label="Modo demonstração">
+        <span aria-hidden="true">●</span> Modo demonstração — preços fictícios
+      </section>
+
+      <section class="boas-vindas" id="estado-inicial">
+        <p class="etiqueta">LOJA FÍSICA</p>
+        <p>Leia o código de barras do produto ou faça uma busca manual.</p>
+      </section>
+
+      <section class="leitura" aria-labelledby="titulo-leitura">
+        <h2 id="titulo-leitura">Ler produto</h2>
+        <button class="botao botao--principal" id="botao-camera" type="button">
+          <span aria-hidden="true">▣</span> Abrir câmera
+        </button>
+        <div class="camera" id="camera" hidden>
+          <video id="video" playsinline></video>
+          <p>Aponte a câmera para o código de barras.</p>
+          <button class="botao botao--texto" id="botao-fechar-camera" type="button">Fechar câmera</button>
+        </div>
+        <div class="divisor"><span>ou</span></div>
+        <form id="formulario-busca" class="busca">
+          <label for="campo-busca">Código ou nome do produto</label>
+          <div class="busca__linha">
+            <input id="campo-busca" autocomplete="off" inputmode="search" placeholder="Ex.: 7898541474111" />
+            <button type="submit" aria-label="Buscar produto">⌕</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="produto" id="produto" hidden aria-labelledby="nome-produto">
+        <div class="produto__topo">
+          <span class="produto__status">PREÇO OFICIAL • LOJA FÍSICA</span>
+          <span class="produto__codigo" id="codigo-produto"></span>
+        </div>
+        <h2 id="nome-produto"></h2>
+        <p class="produto__detalhe" id="detalhe-produto"></p>
+        <p class="produto__preco" id="preco-produto"></p>
+        <p class="produto__instrucao">Compare este valor com a etiqueta da gôndula.</p>
+        <div class="acoes" aria-label="Resultado da conferência">
+          <button class="acao acao--correta" data-status="correta" type="button">✓ Etiqueta correta</button>
+          <button class="acao acao--divergente" data-status="divergente" type="button">! Preço divergente</button>
+          <button class="acao acao--ausente" data-status="ausente" type="button">⊘ Sem etiqueta</button>
+        </div>
+      </section>
+
+      <p id="mensagem" class="mensagem" role="status"></p>
+    </main>
+
+    <dialog class="modal" id="modal-admin" aria-labelledby="titulo-admin">
+      <form method="dialog" id="formulario-admin">
+        <button class="modal__fechar" id="botao-fechar-admin" type="button" aria-label="Fechar">×</button>
+        <p class="etiqueta">ACESSO RESTRITO</p>
+        <h2 id="titulo-admin">Sair do modo de conferência</h2>
+        <p>Informe as credenciais de administrador para encerrar a operação.</p>
+        <label for="usuario-admin">Usuário</label>
+        <input id="usuario-admin" autocomplete="username" required />
+        <label for="senha-admin">Senha</label>
+        <input id="senha-admin" type="password" autocomplete="current-password" required />
+        <p class="erro" id="erro-admin" role="alert"></p>
+        <button class="botao botao--principal" type="submit">Autorizar saída</button>
+      </form>
+    </dialog>
+
+    <section class="tela-encerrada" id="tela-encerrada" hidden>
+      <span aria-hidden="true">✓</span>
+      <h1>Operação encerrada</h1>
+      <p>O acesso foi autorizado por um administrador.</p>
+      <button class="botao botao--principal" id="botao-retomar" type="button">Retomar conferência</button>
+    </section>
+    <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
