@@ -60,42 +60,44 @@ async function abrirCamera() {
     return;
   }
   document.querySelector('#camera').hidden = false;
-  mensagem('Câmera ativa. Aponte para o código de barras e mantenha-o dentro da imagem.');
+  const video = document.querySelector('#video');
+
+  mensagem('Ativando câmera...');
 
   if (window.ZXingBrowser?.BrowserMultiFormatReader) {
     try {
       leitorZxing = new ZXingBrowser.BrowserMultiFormatReader();
       controlesZxing = await leitorZxing.decodeFromConstraints(
         { video: { facingMode: { ideal: 'environment' } }, audio: false },
-        document.querySelector('#video'),
+        video,
         resultado => {
           if (!resultado?.getText()) return;
           document.querySelector('#campo-busca').value = resultado.getText();
           buscarProduto(resultado.getText());
         }
       );
+      mensagem('Câmera ativa. Aponte para o código de barras.');
       return;
-    } catch {
-      mensagem('Não foi possível iniciar a leitura. Verifique a permissão da câmera e tente novamente.');
-      encerrarCamera();
-      return;
+    } catch (err) {
+      console.error(err);
+      mensagem('Erro ao iniciar leitor ZXing. Tentando modo nativo...');
     }
   }
 
   if (!('BarcodeDetector' in window)) {
-    mensagem('Leitor de código indisponível. Conecte-se à internet e recarregue o app, ou use a busca manual.');
+    mensagem('Leitor de código indisponível neste navegador. Use a busca manual.');
     encerrarCamera();
     return;
   }
 
   try {
     streamCamera = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
-    const video = document.querySelector('#video');
     video.srcObject = streamCamera;
     await video.play();
     iniciarLeituraPorCamera();
+    mensagem('Câmera ativa. Aponte para o código de barras.');
   } catch {
-    mensagem('Não foi possível abrir a câmera. Verifique a permissão e tente novamente.');
+    mensagem('Não foi possível abrir a câmera. Verifique a permissão.');
     encerrarCamera();
   }
 }
@@ -122,11 +124,20 @@ async function iniciarLeituraPorCamera() {
 
 function encerrarCamera() {
   leituraAtiva = false;
-  controlesZxing?.stop();
-  controlesZxing = null;
+  if (controlesZxing) {
+    controlesZxing.stop();
+    controlesZxing = null;
+  }
   leitorZxing = null;
-  streamCamera?.getTracks().forEach(track => track.stop());
-  streamCamera = null;
+
+  if (streamCamera) {
+    streamCamera.getTracks().forEach(track => track.stop());
+    streamCamera = null;
+  }
+
+  const video = document.querySelector('#video');
+  if (video) video.srcObject = null;
+
   document.querySelector('#camera').hidden = true;
 }
 
