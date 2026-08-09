@@ -64,62 +64,87 @@ async function abrirCamera() {
 
   mensagem('Ativando câmera...');
 
-  if (window.ZXingBrowser?.BrowserMultiFormatReader) {
-    try {
-      leitorZxing = new ZXingBrowser.BrowserMultiFormatReader();
-      controlesZxing = await leitorZxing.decodeFromConstraints(
-        { video: { facingMode: { ideal: 'environment' } }, audio: false },
-        video,
-        resultado => {
-          if (!resultado?.getText()) return;
-          document.querySelector('#campo-busca').value = resultado.getText();
-          buscarProduto(resultado.getText());
-        }
-      );
-      mensagem('Câmera ativa. Aponte para o código de barras.');
-      return;
-    } catch (err) {
-      console.error(err);
-      mensagem('Erro ao iniciar leitor ZXing. Tentando modo nativo...');
-    }
-  }
-
-  if (!('BarcodeDetector' in window)) {
-    mensagem('Leitor de código indisponível neste navegador. Use a busca manual.');
-    encerrarCamera();
-    return;
-  }
-
   try {
-    streamCamera = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    const constraints = {
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: false
+    };
+
+    streamCamera = await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject = streamCamera;
     await video.play();
-    iniciarLeituraPorCamera();
-    mensagem('Câmera ativa. Aponte para o código de barras.');
-  } catch {
-    mensagem('Não foi possível abrir a câmera. Verifique a permissão.');
+
+    if ('BarcodeDetector' in window) {
+      mensagem('Leitor nativo ativo. Aponte para o código.');
+      iniciarLeituraNativa();
+      return;
+    }
+
+    if (window.ZXingBrowser?.BrowserMultiFormatReader) {
+      mensagem('Leitor ZXing ativo. Aponte para o código.');
+      iniciarLeituraZxing(video);
+      return;
+    }
+
+    mensagem('Leitor de código não suportado. Use a busca manual.');
+    encerrarCamera();
+  } catch (err) {
+    console.error(err);
+    mensagem('Erro ao abrir câmera. Verifique as permissões.');
     encerrarCamera();
   }
 }
 
-async function iniciarLeituraPorCamera() {
-  if (leituraAtiva) return;
-  leituraAtiva = true;
-  const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'upc_a'] });
-  const video = document.querySelector('#video');
-  const ler = async () => {
-    if (!leituraAtiva) return;
-    try {
-      const codigos = await detector.detect(video);
-      if (codigos[0]?.rawValue) {
-        document.querySelector('#campo-busca').value = codigos[0].rawValue;
-        buscarProduto(codigos[0].rawValue);
-        return;
-      }
-    } catch { /* mantém a alternativa de digitação */ }
-    requestAnimationFrame(ler);
-  };
-  ler();
+async function iniciarLeituraNativa() {
+  try {
+    const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'upc_a'] });
+    const video = document.querySelector('#video');
+
+    const ler = async () => {
+      if (!leituraAtiva) return;
+      try {
+        const codigos = await detector.detect(video);
+        if (codigos[0]?.rawValue) {
+          document.querySelector('#campo-busca').value = codigos[0].rawValue;
+          buscarProduto(codigos[0].rawValue);
+          return;
+        }
+      } catch (e) {}
+      requestAnimationFrame(ler);
+    };
+
+    leituraAtiva = true;
+    ler();
+  } catch (e) {
+    console.error('Erro no detector nativo:', e);
+  }
+}
+
+async function iniciarLeituraZxing(video) {
+  try {
+    leitorZxing = new ZXingBrowser.BrowserMultiFormatReader();
+    leituraAtiva = true;
+
+    const ler = async () => {
+      if (!leituraAtiva) return;
+      try {
+        const resultado = await leitorZxing.decodeFromVideoElement(video);
+        if (resultado?.getText()) {
+          document.querySelector('#campo-busca').value = resultado.getText();
+          buscarProduto(resultado.getText());
+          return;
+        }
+      } catch (e) {}
+      requestAnimationFrame(ler);
+    };
+    ler();
+  } catch (e) {
+    console.error('Erro no ZXing:', e);
+  }
 }
 
 function encerrarCamera() {
