@@ -180,6 +180,21 @@ document.querySelector('#botao-fechar-admin').addEventListener('click', () => {
   modalAdmin.close();
   document.querySelector('#erro-admin').textContent = '';
 });
+function tentarSairDoKiosk() {
+  if (window.fully) {
+    console.log('Comunicando com Fully Kiosk...');
+    try {
+      // Tenta disparar o comando de saída do modo Kiosk
+      // Nota: Isso requer a opção "Allow JS to exit Kiosk Mode" ativa nas configurações do Fully Kiosk
+      window.fully.executeCommand('exit_kiosk_mode');
+    } catch (e) {
+      console.error('Erro ao tentar sair do modo kiosk via API:', e);
+    }
+  } else {
+    console.log('API do Fully Kiosk não detectada (rodando em navegador comum).');
+  }
+}
+
 document.querySelector('#formulario-admin').addEventListener('submit', evento => {
   evento.preventDefault();
   const usuario = document.querySelector('#usuario-admin').value;
@@ -187,6 +202,7 @@ document.querySelector('#formulario-admin').addEventListener('submit', evento =>
   if (usuario === 'admin' && senha === 'admin') {
     modalAdmin.close();
     document.querySelector('#tela-encerrada').hidden = false;
+    tentarSairDoKiosk();
     return;
   }
   document.querySelector('#erro-admin').textContent = 'Usuário ou senha incorretos.';
