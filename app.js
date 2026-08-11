@@ -103,17 +103,37 @@ async function iniciarLeituraNativa() {
   try {
     const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'upc_a'] });
     const video = document.querySelector('#video');
+    const trackingBox = document.querySelector('#tracking-box');
 
     const ler = async () => {
       if (!leituraAtiva) return;
       try {
         const codigos = await detector.detect(video);
-        if (codigos[0]?.rawValue) {
-          document.querySelector('#campo-busca').value = codigos[0].rawValue;
-          buscarProduto(codigos[0].rawValue);
-          return;
+        if (codigos.length > 0) {
+          const codigo = codigos[0];
+
+          // Atualiza a caixa de rastreamento visual
+          if (trackingBox) {
+            const { x, y, width, height } = codigo.boundingBox;
+            trackingBox.style.left = `${x}px`;
+            trackingBox.style.top = `${y}px`;
+            trackingBox.style.width = `${width}px`;
+            trackingBox.style.height = `${height}px`;
+            trackingBox.hidden = false;
+          }
+
+          if (codigo.rawValue) {
+            console.log('Código detectado nativamente:', codigo.rawValue);
+            document.querySelector('#campo-busca').value = codigo.rawValue;
+            buscarProduto(codigo.rawValue);
+            return;
+          }
+        } else if (trackingBox) {
+          trackingBox.hidden = true;
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('Erro durante a detecção nativa:', e);
+      }
       requestAnimationFrame(ler);
     };
 
@@ -121,6 +141,7 @@ async function iniciarLeituraNativa() {
     ler();
   } catch (e) {
     console.error('Erro no detector nativo:', e);
+    mensagem('Erro ao iniciar leitor nativo. Tentando fallback...');
   }
 }
 
@@ -154,6 +175,9 @@ function encerrarCamera() {
     controlesZxing = null;
   }
   leitorZxing = null;
+
+  const trackingBox = document.querySelector('#tracking-box');
+  if (trackingBox) trackingBox.hidden = true;
 
   if (streamCamera) {
     streamCamera.getTracks().forEach(track => track.stop());

@@ -39,6 +39,12 @@
         </button>
         <div class="camera" id="camera" hidden>
           <video id="video" playsinline autoplay muted></video>
+          <div class="camera__overlay">
+            <div class="camera__viewfinder">
+              <div class="camera__line"></div>
+            </div>
+            <div class="camera__tracking-box" id="tracking-box" hidden></div>
+          </div>
           <p>Aponte a câmera para o código de barras.</p>
           <button class="botao botao--texto" id="botao-fechar-camera" type="button">Fechar câmera</button>
         </div>
