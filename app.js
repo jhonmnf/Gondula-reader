@@ -10,7 +10,17 @@ let leitorZxing = null;
 let controlesZxing = null;
 
 const formatarPreco = valor => valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-const mensagem = texto => { document.querySelector('#mensagem').textContent = texto; };
+const mensagem = (texto, tipo = 'info') => {
+  const el = document.querySelector('#mensagem');
+  el.textContent = texto;
+
+  if (tipo === 'erro') {
+    el.classList.add('mensagem--erro');
+    setTimeout(() => el.classList.remove('mensagem--erro'), 500);
+  } else {
+    el.classList.remove('mensagem--erro');
+  }
+};
 
 function encontrarProduto(termo) {
   const busca = termo.trim().toLowerCase();
@@ -25,7 +35,16 @@ function exibirProduto(produto) {
   document.querySelector('#nome-produto').textContent = produto.nome;
   document.querySelector('#detalhe-produto').textContent = produto.detalhe;
   document.querySelector('#preco-produto').textContent = formatarPreco(produto.preco);
-  document.querySelector('#produto').hidden = false;
+
+  const elProduto = document.querySelector('#produto');
+  elProduto.hidden = false;
+
+  // Adiciona animação de entrada e rola a tela suavemente
+  elProduto.classList.remove('produto--animar');
+  void elProduto.offsetWidth; // Trigger reflow
+  elProduto.classList.add('produto--animar');
+  elProduto.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
   mensagem('Produto encontrado. Compare a etiqueta e registre o resultado.');
   encerrarCamera();
 }
@@ -34,7 +53,7 @@ async function buscarProduto(termo) {
   const termoLimpo = termo.trim();
   if (!termoLimpo) {
     document.querySelector('#produto').hidden = true;
-    mensagem('Informe o código ou nome de um produto para buscar.');
+    mensagem('Informe o código ou nome de um produto para buscar.', 'erro');
     return;
   }
 
@@ -60,11 +79,11 @@ async function buscarProduto(termo) {
         return;
       }
     } else {
-      mensagem(`⚠️ Servidor respondeu com erro ${response.status}`);
+      mensagem(`⚠️ Servidor respondeu com erro ${response.status}`, 'erro');
     }
   } catch (err) {
     console.error('ERRO CRÍTICO NO FETCH:', err);
-    mensagem('🔌 Servidor offline. Usando catálogo local...');
+    mensagem('🔌 Servidor offline. Usando catálogo local...', 'erro');
   }
 
   // Fallback: Busca no catálogo local
@@ -72,7 +91,7 @@ async function buscarProduto(termo) {
   const produto = encontrarProduto(termoLimpo);
   if (!produto) {
     document.querySelector('#produto').hidden = true;
-    mensagem('❌ Produto não encontrado em lugar nenhum.');
+    mensagem('❌ Produto não encontrado em lugar nenhum.', 'erro');
     return;
   }
   mensagem('📦 Produto encontrado no catálogo local.');
