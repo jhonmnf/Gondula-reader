@@ -30,16 +30,36 @@ function exibirProduto(produto) {
   encerrarCamera();
 }
 
-function buscarProduto(termo) {
+async function buscarProduto(termo) {
   if (!termo.trim()) {
     document.querySelector('#produto').hidden = true;
     mensagem('Informe o código ou nome de um produto para buscar.');
     return;
   }
+
+  mensagem('Buscando produto...');
+
+  try {
+    // Tenta buscar no simulador Alterdata (API)
+    const response = await fetch(`http://localhost:5000/api/product/${termo.trim()}`);
+
+    if (response.ok) {
+      const resultado = await response.json();
+      if (resultado.success) {
+        console.log('Produto encontrado via API:', resultado.data);
+        exibirProduto(resultado.data);
+        return;
+      }
+    }
+  } catch (err) {
+    console.log('Servidor offline ou erro na API, usando catálogo local...');
+  }
+
+  // Fallback: Busca no catálogo local caso a API falhe ou não encontre
   const produto = encontrarProduto(termo);
   if (!produto) {
     document.querySelector('#produto').hidden = true;
-    mensagem('Produto não encontrado no catálogo de demonstração. Tente 7898541474111.');
+    mensagem('Produto não encontrado. Tente 7898541474111.');
     return;
   }
   exibirProduto(produto);

@@ -1,0 +1,26 @@
+[
+  {
+    "codigo": "7891234567890",
+    "nome": "Coca Cola 2L",
+    "preco": 8.99,
+    "estoque": 50
+  },
+  {
+    "codigo": "7890001112223",
+    "nome": "Arroz Tio João 5kg",
+    "preco": 24.50,
+    "estoque": 20
+  },
+  {
+    "codigo": "7894445556667",
+    "nome": "Feijão Carioca Kicaldo 1kg",
+    "preco": 7.20,
+    "estoque": 100
+  },
+  {
+    "codigo": "12345678",
+    "nome": "Produto Teste Interno",
+    "preco": 1.00,
+    "estoque": 10
+  }
+]
