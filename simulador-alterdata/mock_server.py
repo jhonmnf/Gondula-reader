@@ -1,8 +1,13 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 import json
 import os
 
 app = Flask(__name__)
+CORS(app) # Isso libera o acesso para que o seu app consiga fazer requisições
+
+# Carrega os dados do JSON
+DATA_FILE = 'mock_data.json'
 
 # Carrega os dados do JSON
 DATA_FILE = 'mock_data.json'
