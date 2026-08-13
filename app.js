@@ -31,37 +31,51 @@ function exibirProduto(produto) {
 }
 
 async function buscarProduto(termo) {
-  if (!termo.trim()) {
+  const termoLimpo = termo.trim();
+  if (!termoLimpo) {
     document.querySelector('#produto').hidden = true;
     mensagem('Informe o código ou nome de um produto para buscar.');
     return;
   }
 
-  mensagem('Buscando produto...');
+  console.log('--- INICIANDO BUSCA ---');
+  console.log('Termo digitado:', termoLimpo);
+  mensagem('🔄 Conectando ao servidor Alterdata...');
 
   try {
-    // Tenta buscar no simulador Alterdata (API)
-    const response = await fetch(`http://localhost:5000/api/product/${termo.trim()}`);
+    console.log('Tentando fetch em: http://127.0.0.1:5000/api/product/' + termoLimpo);
+    const response = await fetch(`http://127.0.0.1:5000/api/product/${termoLimpo}`, {
+        mode: 'cors',
+        cache: 'no-cache'
+    });
+
+    console.log('Resposta do servidor status:', response.status);
 
     if (response.ok) {
       const resultado = await response.json();
+      console.log('JSON recebido:', resultado);
       if (resultado.success) {
-        console.log('Produto encontrado via API:', resultado.data);
+        mensagem('✅ Produto encontrado no servidor!');
         exibirProduto(resultado.data);
         return;
       }
+    } else {
+      mensagem(`⚠️ Servidor respondeu com erro ${response.status}`);
     }
   } catch (err) {
-    console.log('Servidor offline ou erro na API, usando catálogo local...');
+    console.error('ERRO CRÍTICO NO FETCH:', err);
+    mensagem('🔌 Servidor offline. Usando catálogo local...');
   }
 
-  // Fallback: Busca no catálogo local caso a API falhe ou não encontre
-  const produto = encontrarProduto(termo);
+  // Fallback: Busca no catálogo local
+  console.log('Buscando no catálogo local...');
+  const produto = encontrarProduto(termoLimpo);
   if (!produto) {
     document.querySelector('#produto').hidden = true;
-    mensagem('Produto não encontrado. Tente 7898541474111.');
+    mensagem('❌ Produto não encontrado em lugar nenhum.');
     return;
   }
+  mensagem('📦 Produto encontrado no catálogo local.');
   exibirProduto(produto);
 }
 
