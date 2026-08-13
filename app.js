@@ -62,8 +62,8 @@ async function buscarProduto(termo) {
   mensagem('🔄 Conectando ao servidor Alterdata...');
 
   try {
-    console.log('Tentando fetch em: http://127.0.0.1:5000/api/product/' + termoLimpo);
-    const response = await fetch(`http://127.0.0.1:5000/api/product/${termoLimpo}`, {
+    console.log('Tentando fetch em: http://192.168.0.122:5000/api/product/' + termoLimpo);
+    const response = await fetch(`http://192.168.0.122:5000/api/product/${termoLimpo}`, {
         mode: 'cors',
         cache: 'no-cache'
     });
