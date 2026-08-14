@@ -22,15 +22,43 @@ const mensagem = (texto, tipo = 'info') => {
   }
 };
 
-function encontrarProduto(termo) {
+function filtrarProdutos(termo) {
   const busca = termo.trim().toLowerCase();
-  if (!busca) return null;
-  return catalogo.find(item => item.codigo === busca || item.nome.toLowerCase().includes(busca));
+  if (!busca) return [];
+  return catalogo.filter(item => item.codigo.includes(busca) || item.nome.toLowerCase().includes(busca));
+}
+
+function exibirListaProdutos(produtos) {
+  document.querySelector('#estado-inicial').hidden = true;
+  document.querySelector('#produto').hidden = true;
+  document.querySelector('#leitura').hidden = true; // Oculta a busca para focar na lista
+
+  const container = document.querySelector('#resultados-grade');
+  container.innerHTML = '';
+
+  produtos.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'produto-item';
+    item.innerHTML = `
+      <span class="nome">${p.nome}</span>
+      <div class="info">
+        <span>${p.codigo}</span>
+        <span class="preco">${formatarPreco(p.preco)}</span>
+      </div>
+    `;
+    item.onclick = () => exibirProduto(p);
+    container.appendChild(item);
+  });
+
+  document.querySelector('#lista-resultados').hidden = false;
+  mensagem(`${produtos.length} produto(s) encontrado(s). Selecione o correto.`);
 }
 
 function exibirProduto(produto) {
   produtoAtual = produto;
   document.querySelector('#estado-inicial').hidden = true;
+  document.querySelector('#lista-resultados').hidden = true;
+  document.querySelector('#leitura').hidden = true;
   document.querySelector('#codigo-produto').textContent = produto.codigo;
   document.querySelector('#nome-produto').textContent = produto.nome;
   document.querySelector('#detalhe-produto').textContent = produto.detalhe;
@@ -53,6 +81,8 @@ async function buscarProduto(termo) {
   const termoLimpo = termo.trim();
   if (!termoLimpo) {
     document.querySelector('#produto').hidden = true;
+    document.querySelector('#lista-resultados').hidden = true;
+    document.querySelector('#leitura').hidden = false;
     mensagem('Informe o código ou nome de um produto para buscar.', 'erro');
     return;
   }
@@ -88,14 +118,21 @@ async function buscarProduto(termo) {
 
   // Fallback: Busca no catálogo local
   console.log('Buscando no catálogo local...');
-  const produto = encontrarProduto(termoLimpo);
-  if (!produto) {
+  const produtos = filtrarProdutos(termoLimpo);
+
+  if (produtos.length === 0) {
     document.querySelector('#produto').hidden = true;
+    document.querySelector('#lista-resultados').hidden = true;
     mensagem('❌ Produto não encontrado em lugar nenhum.', 'erro');
     return;
   }
-  mensagem('📦 Produto encontrado no catálogo local.');
-  exibirProduto(produto);
+
+  if (produtos.length === 1) {
+    mensagem('📦 Produto encontrado no catálogo local.');
+    exibirProduto(produtos[0]);
+  } else {
+    exibirListaProdutos(produtos);
+  }
 }
 
 function registrarConferencia(status) {
@@ -242,6 +279,13 @@ function encerrarCamera() {
 
   document.querySelector('#camera').hidden = true;
 }
+
+document.querySelector('#botao-voltar-busca').addEventListener('click', () => {
+  document.querySelector('#lista-resultados').hidden = true;
+  document.querySelector('#leitura').hidden = false;
+  document.querySelector('#produto').hidden = true;
+  mensagem('Busque novamente por outro produto.');
+});
 
 document.querySelector('#formulario-busca').addEventListener('submit', evento => {
   evento.preventDefault();

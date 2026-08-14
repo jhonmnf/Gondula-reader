@@ -54,10 +54,16 @@
         <form id="formulario-busca" class="busca">
           <label for="campo-busca">Código ou nome do produto</label>
           <div class="busca__linha">
-            <input id="campo-busca" autocomplete="off" inputmode="search" placeholder="Ex.: 7898541474111" />
+            <input id="campo-busca" autocomplete="off" inputmode="search" placeholder="Ex.: 74111" />
             <button type="submit" aria-label="Buscar produto">⌕</button>
           </div>
         </form>
+      </section>
+
+      <section class="lista-resultados" id="lista-resultados" hidden aria-labelledby="titulo-resultados">
+        <h2 id="titulo-resultados">Produtos encontrados</h2>
+        <div class="resultados-grade" id="resultados-grade"></div>
+        <button class="botao botao--texto" id="botao-voltar-busca" type="button">← Voltar para busca</button>
       </section>
 
       <section class="produto" id="produto" hidden aria-labelledby="nome-produto">
