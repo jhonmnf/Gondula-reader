@@ -320,10 +320,21 @@ document.querySelector('#botao-voltar-busca').addEventListener('click', () => {
 });
 
 document.querySelector('#botao-voltar-produto').addEventListener('click', () => {
-  setHidden('#produto', true);
-  setHidden('#leitura', false);
-  setHidden('#lista-resultados', true);
-  mensagem('Busque novamente por outro produto.');
+  const grade = document.querySelector('#resultados-grade');
+
+  // Se houver produtos na grade, volta para a lista de resultados
+  if (grade && grade.children.length > 0) {
+    setHidden('#produto', true);
+    setHidden('#lista-resultados', false);
+    setHidden('#leitura', true);
+    mensagem('Retornando aos resultados...');
+  } else {
+    // Caso contrário (ex: busca única), volta para a tela de pesquisa
+    setHidden('#produto', true);
+    setHidden('#leitura', false);
+    setHidden('#lista-resultados', true);
+    mensagem('Busque novamente por outro produto.');
+  }
 });
 
 document.querySelector('#formulario-busca').addEventListener('submit', evento => {
