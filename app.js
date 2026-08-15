@@ -12,6 +12,16 @@ let leitorZxing = null;
 let controlesZxing = null;
 
 const formatarPreco = valor => valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+const setHidden = (id, value) => {
+  const el = document.querySelector(id);
+  if (!el) {
+    console.error(`ERRO: Elemento ${id} não encontrado no HTML!`);
+    return;
+  }
+  el.hidden = value;
+};
+
 const mensagem = (texto, tipo = 'info') => {
   const el = document.querySelector('#mensagem');
   el.textContent = texto;
@@ -40,9 +50,9 @@ function filtrarProdutos(termo) {
 }
 
 function exibirListaProdutos(produtos) {
-  document.querySelector('#estado-inicial').hidden = true;
-  document.querySelector('#produto').hidden = true;
-  document.querySelector('#leitura').hidden = true; // Oculta a busca para focar na lista
+  setHidden('#estado-inicial', true);
+  setHidden('#produto', true);
+  setHidden('#leitura', true); // Oculta a busca para focar na lista
 
   const container = document.querySelector('#resultados-grade');
   container.innerHTML = '';
@@ -70,9 +80,9 @@ function exibirProduto(produto) {
   produtoAtual = produto;
 
   // Esconde todas as outras telas
-  document.querySelector('#estado-inicial').hidden = true;
-  document.querySelector('#lista-resultados').hidden = true;
-  document.querySelector('#leitura').hidden = true;
+  setHidden('#estado-inicial', true);
+  setHidden('#lista-resultados', true);
+  setHidden('#leitura', true);
 
   // Preenche os dados
   document.querySelector('#codigo-produto').textContent = produto.codigo;
@@ -97,9 +107,9 @@ function exibirProduto(produto) {
 async function buscarProduto(termo) {
   const termoLimpo = termo.trim();
   if (!termoLimpo) {
-    document.querySelector('#produto').hidden = true;
-    document.querySelector('#lista-resultados').hidden = true;
-    document.querySelector('#leitura').hidden = false;
+    setHidden('#produto', true);
+    setHidden('#lista-resultados', true);
+    setHidden('#leitura', false);
     mensagem('Informe o código ou nome de um produto para buscar.', 'erro');
     return;
   }
@@ -143,8 +153,8 @@ async function buscarProduto(termo) {
   const produtos = filtrarProdutos(termoLimpo);
 
   if (produtos.length === 0) {
-    document.querySelector('#produto').hidden = true;
-    document.querySelector('#lista-resultados').hidden = true;
+    setHidden('#produto', true);
+    setHidden('#lista-resultados', true);
     mensagem('❌ Produto não encontrado em lugar nenhum.', 'erro');
     return;
   }
@@ -171,7 +181,7 @@ async function abrirCamera() {
     mensagem('Este navegador não permite usar a câmera. Use a busca manual.');
     return;
   }
-  document.querySelector('#camera').hidden = false;
+  setHidden('#camera', false);
   const video = document.querySelector('#video');
 
   mensagem('Ativando câmera...');
@@ -299,13 +309,13 @@ function encerrarCamera() {
   const video = document.querySelector('#video');
   if (video) video.srcObject = null;
 
-  document.querySelector('#camera').hidden = true;
+  setHidden('#camera', true);
 }
 
 document.querySelector('#botao-voltar-busca').addEventListener('click', () => {
-  document.querySelector('#lista-resultados').hidden = true;
-  document.querySelector('#leitura').hidden = false;
-  document.querySelector('#produto').hidden = true;
+  setHidden('#lista-resultados', true);
+  setHidden('#leitura', false);
+  setHidden('#produto', true);
   mensagem('Busque novamente por outro produto.');
 });
 
