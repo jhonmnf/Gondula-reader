@@ -1,3 +1,5 @@
+const SERVER_URL = 'http://localhost:5000'; // Altere para 'http://192.168.0.122:5000' quando for usar o servidor real
+
 const catalogo = [
   { codigo: '7898541474111', nome: 'Cloro Gel Altolim', detalhe: '2 litros · Limpeza geral', preco: 12.99 },
   { codigo: '7896006731223', nome: 'Detergente Neutro Brilho', detalhe: '500 ml · Limpeza de louças', preco: 3.49 },
@@ -101,8 +103,8 @@ async function buscarProduto(termo) {
   mensagem('🔄 Conectando ao servidor Alterdata...');
 
   try {
-    console.log('Tentando fetch em: http://192.168.0.122:5000/api/product/' + termoLimpo);
-    const response = await fetch(`http://192.168.0.122:5000/api/product/${termoLimpo}`, {
+    console.log(`Tentando fetch em: ${SERVER_URL}/api/product/${termoLimpo}`);
+    const response = await fetch(`${SERVER_URL}/api/product/${termoLimpo}`, {
         mode: 'cors',
         cache: 'no-cache'
     });
