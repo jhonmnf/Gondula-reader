@@ -319,6 +319,13 @@ document.querySelector('#botao-voltar-busca').addEventListener('click', () => {
   mensagem('Busque novamente por outro produto.');
 });
 
+document.querySelector('#botao-voltar-produto').addEventListener('click', () => {
+  setHidden('#produto', true);
+  setHidden('#leitura', false);
+  setHidden('#lista-resultados', true);
+  mensagem('Busque novamente por outro produto.');
+});
+
 document.querySelector('#formulario-busca').addEventListener('submit', evento => {
   evento.preventDefault();
   buscarProduto(document.querySelector('#campo-busca').value);
