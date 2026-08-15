@@ -66,10 +66,15 @@ function exibirListaProdutos(produtos) {
 }
 
 function exibirProduto(produto) {
+  console.log('Exibindo produto:', produto);
   produtoAtual = produto;
+
+  // Esconde todas as outras telas
   document.querySelector('#estado-inicial').hidden = true;
   document.querySelector('#lista-resultados').hidden = true;
   document.querySelector('#leitura').hidden = true;
+
+  // Preenche os dados
   document.querySelector('#codigo-produto').textContent = produto.codigo;
   document.querySelector('#nome-produto').textContent = produto.nome;
   document.querySelector('#detalhe-produto').textContent = produto.detalhe;
@@ -77,6 +82,7 @@ function exibirProduto(produto) {
 
   const elProduto = document.querySelector('#produto');
   elProduto.hidden = false;
+  elProduto.style.display = 'block'; // Garante a visibilidade forçada
 
   // Adiciona animação de entrada e rola a tela suavemente
   elProduto.classList.remove('produto--animar');
