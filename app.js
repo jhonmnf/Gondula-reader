@@ -25,7 +25,16 @@ const mensagem = (texto, tipo = 'info') => {
 function filtrarProdutos(termo) {
   const busca = termo.trim().toLowerCase();
   if (!busca) return [];
-  return catalogo.filter(item => item.codigo.includes(busca) || item.nome.toLowerCase().includes(busca));
+
+  return catalogo.filter(item => {
+    const codigo = item.codigo.toLowerCase();
+    const nome = item.nome.toLowerCase();
+    return codigo.endsWith(busca) || codigo.includes(busca) || nome.includes(busca);
+  }).sort((a, b) => {
+    const aEnds = a.codigo.endsWith(busca);
+    const bEnds = b.codigo.endsWith(busca);
+    return bEnds - aEnds; // Prioritize those that end with the search term
+  });
 }
 
 function exibirListaProdutos(produtos) {
@@ -104,12 +113,17 @@ async function buscarProduto(termo) {
       const resultado = await response.json();
       console.log('JSON recebido:', resultado);
       if (resultado.success) {
-        mensagem('✅ Produto encontrado no servidor!');
-        exibirProduto(resultado.data);
+        if (Array.isArray(resultado.data)) {
+          mensagem('✅ Produtos encontrados no servidor!');
+          exibirListaProdutos(resultado.data);
+        } else {
+          mensagem('✅ Produto encontrado no servidor!');
+          exibirProduto(resultado.data);
+        }
         return;
       }
     } else {
-      mensagem(`⚠️ Servidor respondeu com erro ${response.status}`, 'erro');
+      console.log(`Servidor respondeu ${response.status}. Prosseguindo para busca local...`);
     }
   } catch (err) {
     console.error('ERRO CRÍTICO NO FETCH:', err);
