@@ -1,0 +1,28 @@
+{
+  "name": "gondula-reader",
+  "version": "1.0.0",
+  "description": "Conferência de etiquetas de gôndula - Sistema de leitura de códigos de barras",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jhonmnf/Gondula-reader.git"
+  },
+  "keywords": [
+    "barcode",
+    "scanner",
+    "vercel",
+    "speed-insights"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jhonmnf/Gondula-reader/issues"
+  },
+  "homepage": "https://github.com/jhonmnf/Gondula-reader#readme",
+  "dependencies": {
+    "@vercel/speed-insights": "^2.0.0"
+  }
+}
