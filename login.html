@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#146c43" />
+    <meta name="description" content="Login - Gôndula Reader" />
+    <link rel="icon" href="icone.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>Login - Gôndula Reader</title>
+  </head>
+  <body>
+    <main class="aplicativo">
+      <header class="cabecalho">
+        <div class="marca">
+          <span class="marca__icone" aria-hidden="true">✓</span>
+          <div>
+            <p class="marca__nome">Gôndula Reader</p>
+            <p class="marca__subtitulo">Acesso Restrito</p>
+          </div>
+        </div>
+      </header>
+
+      <section class="login-container">
+        <div class="boas-vindas">
+          <p class="etiqueta">AUTENTICAÇÃO</p>
+          <p>Entre com suas credenciais para acessar o sistema de conferência.</p>
+        </div>
+
+        <form id="formulario-login" class="busca">
+          <label for="usuario">Usuário</label>
+          <div class="busca__linha">
+            <input id="usuario" autocomplete="username" required placeholder="Usuário" />
+          </div>
+
+          <label for="senha" style="margin-top: 1rem; display: block;">Senha</label>
+          <div class="busca__linha">
+            <input id="senha" type="password" autocomplete="current-password" required placeholder="Senha" />
+          </div>
+
+          <button type="submit" class="botao botao--principal" style="margin-top: 2rem; width: 100%;">
+            Entrar
+          </button>
+        </form>
+        <p id="erro-login" class="mensagem" role="alert" style="text-align: center; margin-top: 1rem;"></p>
+      </section>
+    </main>
+    <script src="login.js"></script>
+  </body>
+</html>

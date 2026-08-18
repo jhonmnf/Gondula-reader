@@ -1,29 +1,20 @@
-const SERVER_URL = 'http://localhost:5000'; // Altere para 'http://192.168.0.122:5000' quando for usar o servidor real
+if (localStorage.getItem('isLoggedIn') !== 'true') {
+  window.location.href = 'login.html';
+}
 
-const catalogo = [
-  { codigo: '7898541474111', nome: 'Cloro Gel Altolim', detalhe: '2 litros · Limpeza geral', preco: 12.99 },
-  { codigo: '7896006731223', nome: 'Detergente Neutro Brilho', detalhe: '500 ml · Limpeza de louças', preco: 3.49 },
-  { codigo: '7891024187543', nome: 'Saco para Lixo Reforçado', detalhe: '50 litros · Rolo com 10 unidades', preco: 16.9 }
-];
-let produtoAtual = null;
-let streamCamera = null;
-let leituraAtiva = false;
-let leitorZxing = null;
-let controlesZxing = null;
+const SERVER_URL = 'http://localhost:5000'; // Altere para a URL de produção fornecida pela Alterdata
 
 const formatarPreco = valor => valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const setHidden = (id, value) => {
   const el = document.querySelector(id);
-  if (!el) {
-    console.error(`ERRO: Elemento ${id} não encontrado no HTML!`);
-    return;
-  }
+  if (!el) return;
   el.hidden = value;
 };
 
 const mensagem = (texto, tipo = 'info') => {
   const el = document.querySelector('#mensagem');
+  if (!el) return;
   el.textContent = texto;
 
   if (tipo === 'erro') {
@@ -34,25 +25,51 @@ const mensagem = (texto, tipo = 'info') => {
   }
 };
 
-function filtrarProdutos(termo) {
-  const busca = termo.trim().toLowerCase();
-  if (!busca) return [];
+async function buscarProduto(termo) {
+  const termoLimpo = termo.trim();
+  if (!termoLimpo) {
+    setHidden('#produto', true);
+    setHidden('#lista-resultados', true);
+    setHidden('#leitura', false);
+    mensagem('Informe o código ou nome do produto.', 'erro');
+    return;
+  }
 
-  return catalogo.filter(item => {
-    const codigo = item.codigo.toLowerCase();
-    const nome = item.nome.toLowerCase();
-    return codigo.endsWith(busca) || codigo.includes(busca) || nome.includes(busca);
-  }).sort((a, b) => {
-    const aEnds = a.codigo.endsWith(busca);
-    const bEnds = b.codigo.endsWith(busca);
-    return bEnds - aEnds; // Prioritize those that end with the search term
-  });
+  mensagem('Consultando servidor...');
+
+  try {
+    const response = await fetch(`${SERVER_URL}/api/product/${termoLimpo}`, {
+        mode: 'cors',
+        cache: 'no-cache'
+    });
+
+    if (response.ok) {
+      const resultado = await response.json();
+      if (resultado.success) {
+        if (Array.isArray(resultado.data)) {
+          mensagem('Produtos encontrados.');
+          exibirListaProdutos(resultado.data);
+        } else {
+          mensagem('Produto encontrado.');
+          exibirProduto(resultado.data);
+        }
+        return;
+      }
+    }
+  } catch (err) {
+    console.error('Erro de conexão:', err);
+    mensagem('Erro de conexão com o servidor.', 'erro');
+  }
+
+  setHidden('#produto', true);
+  setHidden('#lista-resultados', true);
+  mensagem('Produto não encontrado.', 'erro');
 }
 
 function exibirListaProdutos(produtos) {
   setHidden('#estado-inicial', true);
   setHidden('#produto', true);
-  setHidden('#leitura', true); // Oculta a busca para focar na lista
+  setHidden('#leitura', true);
 
   const container = document.querySelector('#resultados-grade');
   container.innerHTML = '';
@@ -72,19 +89,15 @@ function exibirListaProdutos(produtos) {
   });
 
   document.querySelector('#lista-resultados').hidden = false;
-  mensagem(`${produtos.length} produto(s) encontrado(s). Selecione o correto.`);
 }
 
 function exibirProduto(produto) {
-  console.log('Exibindo produto:', produto);
   produtoAtual = produto;
 
-  // Esconde todas as outras telas
   setHidden('#estado-inicial', true);
   setHidden('#lista-resultados', true);
   setHidden('#leitura', true);
 
-  // Preenche os dados
   document.querySelector('#codigo-produto').textContent = produto.codigo;
   document.querySelector('#nome-produto').textContent = produto.nome;
   document.querySelector('#detalhe-produto').textContent = produto.detalhe;
@@ -92,93 +105,26 @@ function exibirProduto(produto) {
 
   const elProduto = document.querySelector('#produto');
   elProduto.hidden = false;
-  elProduto.style.display = 'block'; // Garante a visibilidade forçada
+  elProduto.style.display = 'block';
 
-  // Adiciona animação de entrada e rola a tela suavemente
   elProduto.classList.remove('produto--animar');
-  void elProduto.offsetWidth; // Trigger reflow
+  void elProduto.offsetWidth;
   elProduto.classList.add('produto--animar');
   elProduto.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  mensagem('Produto encontrado. Compare a etiqueta e registre o resultado.');
+  mensagem('Produto localizado.');
   encerrarCamera();
 }
 
-async function buscarProduto(termo) {
-  const termoLimpo = termo.trim();
-  if (!termoLimpo) {
-    setHidden('#produto', true);
-    setHidden('#lista-resultados', true);
-    setHidden('#leitura', false);
-    mensagem('Informe o código ou nome de um produto para buscar.', 'erro');
-    return;
-  }
-
-  console.log('--- INICIANDO BUSCA ---');
-  console.log('Termo digitado:', termoLimpo);
-  mensagem('🔄 Conectando ao servidor Alterdata...');
-
-  try {
-    console.log(`Tentando fetch em: ${SERVER_URL}/api/product/${termoLimpo}`);
-    const response = await fetch(`${SERVER_URL}/api/product/${termoLimpo}`, {
-        mode: 'cors',
-        cache: 'no-cache'
-    });
-
-    console.log('Resposta do servidor status:', response.status);
-
-    if (response.ok) {
-      const resultado = await response.json();
-      console.log('JSON recebido:', resultado);
-      if (resultado.success) {
-        if (Array.isArray(resultado.data)) {
-          mensagem('✅ Produtos encontrados no servidor!');
-          exibirListaProdutos(resultado.data);
-        } else {
-          mensagem('✅ Produto encontrado no servidor!');
-          exibirProduto(resultado.data);
-        }
-        return;
-      }
-    } else {
-      console.log(`Servidor respondeu ${response.status}. Prosseguindo para busca local...`);
-    }
-  } catch (err) {
-    console.error('ERRO CRÍTICO NO FETCH:', err);
-    mensagem('🔌 Servidor offline. Usando catálogo local...', 'erro');
-  }
-
-  // Fallback: Busca no catálogo local
-  console.log('Buscando no catálogo local...');
-  const produtos = filtrarProdutos(termoLimpo);
-
-  if (produtos.length === 0) {
-    setHidden('#produto', true);
-    setHidden('#lista-resultados', true);
-    mensagem('❌ Produto não encontrado em lugar nenhum.', 'erro');
-    return;
-  }
-
-  if (produtos.length === 1) {
-    mensagem('📦 Produto encontrado no catálogo local.');
-    exibirProduto(produtos[0]);
-  } else {
-    exibirListaProdutos(produtos);
-  }
-}
-
-function registrarConferencia(status) {
-  if (!produtoAtual) return;
-  const registros = JSON.parse(localStorage.getItem('conferencias') || '[]');
-  registros.push({ codigo: produtoAtual.codigo, nome: produtoAtual.nome, status, em: new Date().toISOString() });
-  localStorage.setItem('conferencias', JSON.stringify(registros));
-  const rotulos = { correta: 'Etiqueta marcada como correta.', divergente: 'Divergência registrada para troca.', ausente: 'Etiqueta ausente registrada para impressão.' };
-  mensagem(`${rotulos[status]} Registro salvo neste aparelho.`);
-}
+let produtoAtual = null;
+let streamCamera = null;
+let leituraAtiva = false;
+let leitorZxing = null;
+let controlesZxing = null;
 
 async function abrirCamera() {
   if (!navigator.mediaDevices?.getUserMedia) {
-    mensagem('Este navegador não permite usar a câmera. Use a busca manual.');
+    mensagem('Câmera não suportada neste navegador.');
     return;
   }
   setHidden('#camera', false);
@@ -188,11 +134,7 @@ async function abrirCamera() {
 
   try {
     const constraints = {
-      video: {
-        facingMode: { ideal: 'environment' },
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      },
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: false
     };
 
@@ -201,21 +143,18 @@ async function abrirCamera() {
     await video.play();
 
     if ('BarcodeDetector' in window) {
-      mensagem('Leitor nativo ativo. Aponte para o código.');
       iniciarLeituraNativa();
       return;
     }
 
     if (window.ZXingBrowser?.BrowserMultiFormatReader) {
-      mensagem('Leitor ZXing ativo. Aponte para o código.');
       iniciarLeituraZxing(video);
       return;
     }
 
-    mensagem('Leitor de código não suportado. Use a busca manual.');
+    mensagem('Leitor não suportado. Use a busca manual.');
     encerrarCamera();
   } catch (err) {
-    console.error(err);
     mensagem('Erro ao abrir câmera. Verifique as permissões.');
     encerrarCamera();
   }
@@ -233,8 +172,6 @@ async function iniciarLeituraNativa() {
         const codigos = await detector.detect(video);
         if (codigos.length > 0) {
           const codigo = codigos[0];
-
-          // Atualiza a caixa de rastreamento visual
           if (trackingBox) {
             const { x, y, width, height } = codigo.boundingBox;
             trackingBox.style.left = `${x}px`;
@@ -243,9 +180,7 @@ async function iniciarLeituraNativa() {
             trackingBox.style.height = `${height}px`;
             trackingBox.hidden = false;
           }
-
           if (codigo.rawValue) {
-            console.log('Código detectado nativamente:', codigo.rawValue);
             document.querySelector('#campo-busca').value = codigo.rawValue;
             buscarProduto(codigo.rawValue);
             return;
@@ -253,18 +188,12 @@ async function iniciarLeituraNativa() {
         } else if (trackingBox) {
           trackingBox.hidden = true;
         }
-      } catch (e) {
-        console.error('Erro durante a detecção nativa:', e);
-      }
+      } catch (e) {}
       requestAnimationFrame(ler);
     };
-
     leituraAtiva = true;
     ler();
-  } catch (e) {
-    console.error('Erro no detector nativo:', e);
-    mensagem('Erro ao iniciar leitor nativo. Tentando fallback...');
-  }
+  } catch (e) {}
 }
 
 async function iniciarLeituraZxing(video) {
@@ -285,9 +214,7 @@ async function iniciarLeituraZxing(video) {
       requestAnimationFrame(ler);
     };
     ler();
-  } catch (e) {
-    console.error('Erro no ZXing:', e);
-  }
+  } catch (e) {}
 }
 
 function encerrarCamera() {
@@ -297,18 +224,14 @@ function encerrarCamera() {
     controlesZxing = null;
   }
   leitorZxing = null;
-
   const trackingBox = document.querySelector('#tracking-box');
   if (trackingBox) trackingBox.hidden = true;
-
   if (streamCamera) {
     streamCamera.getTracks().forEach(track => track.stop());
     streamCamera = null;
   }
-
   const video = document.querySelector('#video');
   if (video) video.srcObject = null;
-
   setHidden('#camera', true);
 }
 
@@ -316,24 +239,19 @@ document.querySelector('#botao-voltar-busca').addEventListener('click', () => {
   setHidden('#lista-resultados', true);
   setHidden('#leitura', false);
   setHidden('#produto', true);
-  mensagem('Busque novamente por outro produto.');
+  mensagem('Busca reiniciada.');
 });
 
 document.querySelector('#botao-voltar-produto').addEventListener('click', () => {
   const grade = document.querySelector('#resultados-grade');
-
-  // Se houver produtos na grade, volta para a lista de resultados
   if (grade && grade.children.length > 0) {
     setHidden('#produto', true);
     setHidden('#lista-resultados', false);
     setHidden('#leitura', true);
-    mensagem('Retornando aos resultados...');
   } else {
-    // Caso contrário (ex: busca única), volta para a tela de pesquisa
     setHidden('#produto', true);
     setHidden('#leitura', false);
     setHidden('#lista-resultados', true);
-    mensagem('Busque novamente por outro produto.');
   }
 });
 
@@ -351,18 +269,10 @@ document.querySelector('#botao-fechar-admin').addEventListener('click', () => {
   modalAdmin.close();
   document.querySelector('#erro-admin').textContent = '';
 });
+
 function tentarSairDoKiosk() {
   if (window.fully) {
-    console.log('Comunicando com Fully Kiosk...');
-    try {
-      // Tenta disparar o comando de saída do modo Kiosk
-      // Nota: Isso requer a opção "Allow JS to exit Kiosk Mode" ativa nas configurações do Fully Kiosk
-      window.fully.executeCommand('exit_kiosk_mode');
-    } catch (e) {
-      console.error('Erro ao tentar sair do modo kiosk via API:', e);
-    }
-  } else {
-    console.log('API do Fully Kiosk não detectada (rodando em navegador comum).');
+    try { window.fully.executeCommand('exit_kiosk_mode'); } catch (e) {}
   }
 }
 
@@ -371,17 +281,26 @@ document.querySelector('#formulario-admin').addEventListener('submit', evento =>
   const usuario = document.querySelector('#usuario-admin').value;
   const senha = document.querySelector('#senha-admin').value;
   if (usuario === 'admin' && senha === 'admin') {
+    localStorage.removeItem('isLoggedIn');
     modalAdmin.close();
     document.querySelector('#tela-encerrada').hidden = false;
     tentarSairDoKiosk();
     return;
   }
-  document.querySelector('#erro-admin').textContent = 'Usuário ou senha incorretos.';
+  document.querySelector('#erro-admin').textContent = 'Credenciais incorretas.';
 });
+
 document.querySelector('#botao-retomar').addEventListener('click', () => {
-  document.querySelector('#tela-encerrada').hidden = true;
-  document.querySelector('#formulario-admin').reset();
-  document.querySelector('#erro-admin').textContent = '';
+  window.location.reload();
 });
+
+function registrarConferencia(status) {
+  if (!produtoAtual) return;
+  const registros = JSON.parse(localStorage.getItem('conferencias') || '[]');
+  registros.push({ codigo: produtoAtual.codigo, nome: produtoAtual.nome, status, em: new Date().toISOString() });
+  localStorage.setItem('conferencias', JSON.stringify(registros));
+  const rotulos = { correta: 'Resultado: Correta', divergente: 'Resultado: Divergente', ausente: 'Resultado: Ausente' };
+  mensagem(`${rotulos[status]}. Registro salvo.`);
+}
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');
