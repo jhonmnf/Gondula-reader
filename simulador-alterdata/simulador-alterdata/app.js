@@ -2,7 +2,7 @@ if (localStorage.getItem('isLoggedIn') !== 'true') {
   window.location.href = 'login.html';
 }
 
-const SERVER_URL = ''; // Usando caminhos relativos para Vercel Functions
+const SERVER_URL = 'http://localhost:5000';
 
 const formatarPreco = valor => valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -40,8 +40,15 @@ async function buscarProduto(termo) {
   try {
     const response = await fetch(`${SERVER_URL}/api/product/${termoLimpo}`, {
         mode: 'cors',
-        cache: 'no-cache'
+        cache: 'no-cache',
+        credentials: 'include'
     });
+
+    if (response.status === 401) {
+      localStorage.removeItem('isLoggedIn');
+      window.location.href = 'login.html';
+      return;
+    }
 
     if (response.ok) {
       const resultado = await response.json();
@@ -276,55 +283,49 @@ function tentarSairDoKiosk() {
   }
 }
 
-document.querySelector('#formulario-admin').addEventListener('submit', evento => {
+document.querySelector('#formulario-admin').addEventListener('submit', async evento => {
   evento.preventDefault();
   const usuario = document.querySelector('#usuario-admin').value;
   const senha = document.querySelector('#senha-admin').value;
-  if (usuario === 'admin' && senha === 'admin') {
-    localStorage.removeItem('isLoggedIn');
-    modalAdmin.close();
-    document.querySelector('#tela-encerrada').hidden = false;
-    tentarSairDoKiosk();
-    return;
+
+  try {
+    const response = await fetch(`${SERVER_URL}/api/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario, senha }),
+      credentials: 'include'
+    });
+
+    const resultado = await response.json();
+
+    if (resultado.success) {
+      await fetch(`${SERVER_URL}/api/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      localStorage.removeItem('isLoggedIn');
+      modalAdmin.close();
+      document.querySelector('#tela-encerrada').hidden = false;
+      tentarSairDoKiosk();
+    } else {
+      document.querySelector('#erro-admin').textContent = resultado.message || 'Credenciais incorretas.';
+    }
+  } catch (err) {
+    document.querySelector('#erro-admin').textContent = 'Erro de conexão.';
   }
-  document.querySelector('#erro-admin').textContent = 'Credenciais incorretas.';
 });
 
 document.querySelector('#botao-retomar').addEventListener('click', () => {
   window.location.reload();
 });
 
-async function registrarConferencia(status) {
+function registrarConferencia(status) {
   if (!produtoAtual) return;
-
-  const payload = {
-    codigo: produtoAtual.codigo,
-    nome: produtoAtual.nome,
-    status,
-    em: new Date().toISOString()
-  };
-
+  const registros = JSON.parse(localStorage.getItem('conferencias') || '[]');
+  registros.push({ codigo: produtoAtual.codigo, nome: produtoAtual.nome, status, em: new Date().toISOString() });
+  localStorage.setItem('conferencias', JSON.stringify(registros));
   const rotulos = { correta: 'Resultado: Correta', divergente: 'Resultado: Divergente', ausente: 'Resultado: Ausente' };
-
-  try {
-    const response = await fetch(`${SERVER_URL}/api/conference`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (response.ok) {
-      mensagem(`${rotulos[status]}. Registro salvo no servidor.`);
-    } else {
-      throw new Error('Erro no servidor');
-    }
-  } catch (err) {
-    console.error('Erro na API, salvando localmente:', err);
-    const registros = JSON.parse(localStorage.getItem('conferencias') || '[]');
-    registros.push(payload);
-    localStorage.setItem('conferencias', JSON.stringify(registros));
-    mensagem(`${rotulos[status]}. Salvo localmente (offline).`, 'erro');
-  }
+  mensagem(`${rotulos[status]}. Registro salvo.`);
 }
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');
