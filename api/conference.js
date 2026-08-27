@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, message: 'Método não permitido' });
   }
 
-  const { codigo, nome, status, em } = req.body;
+  const { codigo, nome, status, em, operator } = req.body;
 
   if (!codigo || !status) {
     return res.status(400).json({ success: false, message: 'Dados insuficientes' });
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
           product_codigo: codigo,
           status: status,
           timestamp: em || new Date().toISOString(),
-          operator: 'system'
+          operator: operator || 'system'
         }
       ]);
 

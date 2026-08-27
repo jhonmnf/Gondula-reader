@@ -4,6 +4,34 @@ if (localStorage.getItem('isLoggedIn') !== 'true') {
 
 const SERVER_URL = ''; // Usando caminhos relativos para Vercel Functions
 
+async function sincronizarDadosOffline() {
+  const registros = JSON.parse(localStorage.getItem('conferencias') || '[]');
+  if (registros.length === 0) return;
+
+  console.log(`Sincronizando ${registros.length} registros offline...`);
+
+  const restantes = [];
+  for (const payload of registros) {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/conference`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) throw new Error();
+    } catch (err) {
+      restantes.push(payload);
+    }
+  }
+
+  if (restantes.length === 0) {
+    localStorage.removeItem('conferencias');
+    mensagem('Dados offline sincronizados com sucesso.');
+  } else {
+    localStorage.setItem('conferencias', JSON.stringify(restantes));
+  }
+}
+
 const formatarPreco = valor => valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const setHidden = (id, value) => {
@@ -263,6 +291,15 @@ document.querySelector('#botao-camera').addEventListener('click', abrirCamera);
 document.querySelector('#botao-fechar-camera').addEventListener('click', encerrarCamera);
 document.querySelectorAll('[data-status]').forEach(botao => botao.addEventListener('click', () => registrarConferencia(botao.dataset.status)));
 
+const modalOperador = document.querySelector('#modal-operador');
+document.querySelector('#formulario-operador').addEventListener('submit', evento => {
+  evento.preventDefault();
+  const nome = document.querySelector('#nome-operador').value;
+  efetuarRegistro(nome);
+  modalOperador.close();
+  document.querySelector('#nome-operador').value = '';
+});
+
 const modalAdmin = document.querySelector('#modal-admin');
 document.querySelector('#botao-sair').addEventListener('click', () => modalAdmin.showModal());
 document.querySelector('#botao-fechar-admin').addEventListener('click', () => {
@@ -294,13 +331,22 @@ document.querySelector('#botao-retomar').addEventListener('click', () => {
   window.location.reload();
 });
 
-async function registrarConferencia(status) {
+let statusPendente = null;
+
+function registrarConferencia(status) {
   if (!produtoAtual) return;
+  statusPendente = status;
+  modalOperador.showModal();
+}
+
+async function efetuarRegistro(operator) {
+  if (!produtoAtual || !statusPendente) return;
 
   const payload = {
     codigo: produtoAtual.codigo,
     nome: produtoAtual.nome,
-    status,
+    status: statusPendente,
+    operator: operator,
     em: new Date().toISOString()
   };
 
@@ -314,7 +360,7 @@ async function registrarConferencia(status) {
     });
 
     if (response.ok) {
-      mensagem(`${rotulos[status]}. Registro salvo no servidor.`);
+      mensagem(`${rotulos[statusPendente]}. Registro salvo no servidor.`);
     } else {
       throw new Error('Erro no servidor');
     }
@@ -323,8 +369,13 @@ async function registrarConferencia(status) {
     const registros = JSON.parse(localStorage.getItem('conferencias') || '[]');
     registros.push(payload);
     localStorage.setItem('conferencias', JSON.stringify(registros));
-    mensagem(`${rotulos[status]}. Salvo localmente (offline).`, 'erro');
+    mensagem(`${rotulos[statusPendente]}. Salvo localmente (offline).`, 'erro');
+  } finally {
+    statusPendente = null;
   }
 }
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');
+
+// Inicia sincronização de dados offline ao carregar a página
+window.addEventListener('load', sincronizarDadosOffline);
