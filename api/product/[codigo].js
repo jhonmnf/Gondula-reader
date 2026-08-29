@@ -5,8 +5,8 @@ export default async function handler(req, res) {
   const termo = codigo.trim().toLowerCase();
 
   try {
-    // 1. Busca exata
-    const { data: exactData, error: exactError } = await supabase
+    // 1. Busca exata por código
+    const { data: exactData } = await supabase
       .from('products')
       .select('*')
       .eq('codigo', termo)
@@ -19,12 +19,11 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2. Busca por sufixo (os últimos números)
-    // Supabase (Postgres) usa .ilike() para buscas parciais case-insensitive
-    const { data: matches, error: matchesError } = await supabase
+    // 2. Busca por código (sufixo) ou por nome (parcial)
+    const { data: matches } = await supabase
       .from('products')
       .select('*')
-      .ilike('codigo', `%${termo}`);
+      .or(`codigo.ilike.%${termo},nome.ilike.%${termo}%`);
 
     if (matches && matches.length > 0) {
       if (matches.length === 1) {

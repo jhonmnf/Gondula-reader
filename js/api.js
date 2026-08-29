@@ -43,27 +43,31 @@ export async function sincronizarDadosOffline() {
   const registros = JSON.parse(localStorage.getItem('conferencias') || '[]');
   if (registros.length === 0) return;
 
-  console.log(`Sincronizando ${registros.length} registros offline...`);
+  console.log(`[Sincronização] Iniciando envio de ${registros.length} registros offline...`);
 
   const restantes = [];
-  for (const payload of registros) {
+  for (const [index, payload] of registros.entries()) {
     try {
       const response = await fetch(`${SERVER_URL}/api/conference`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      if (!response.ok) throw new Error();
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      console.log(`[Sincronização] Registro ${index + 1}/${registros.length} enviado com sucesso.`);
     } catch (err) {
+      console.error(`[Sincronização] Falha ao enviar registro ${index + 1}:`, err);
       restantes.push(payload);
     }
   }
 
   if (restantes.length === 0) {
     localStorage.removeItem('conferencias');
+    console.log('[Sincronização] Todos os registros foram sincronizados!');
     return { success: true, count: registros.length };
   } else {
     localStorage.setItem('conferencias', JSON.stringify(restantes));
+    console.warn(`[Sincronização] ${restantes.length} registros não puderam ser sincronizados e permanecem no local.`);
     return { success: false, remaining: restantes.length };
   }
 }
