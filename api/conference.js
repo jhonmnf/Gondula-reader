@@ -1,6 +1,11 @@
 import { supabase } from './_lib/supabase';
 
 export default async function handler(req, res) {
+  // API Security Check
+  if (req.headers['x-api-key'] !== process.env.API_SECRET) {
+    return res.status(401).json({ success: false, message: 'Não autorizado' });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Método não permitido' });
   }

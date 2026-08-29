@@ -12,12 +12,24 @@ export const mensagem = (texto, tipo = 'info') => {
   if (!el) return;
   el.textContent = texto;
 
+  // Remove all possible type classes first
+  el.classList.remove('mensagem--info', 'mensagem--sucesso', 'mensagem--erro', 'mensagem--aviso');
+
+  // Add the specific class for the type
   if (tipo === 'erro') {
     el.classList.add('mensagem--erro');
-    setTimeout(() => el.classList.remove('mensagem--erro'), 500);
+  } else if (tipo === 'sucesso') {
+    el.classList.add('mensagem--sucesso');
+  } else if (tipo === 'aviso') {
+    el.classList.add('mensagem--aviso');
   } else {
-    el.classList.remove('mensagem--erro');
+    el.classList.add('mensagem--info');
   }
+
+  // Brief animation trigger
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = null;
 };
 
 export function exibirListaProdutos(produtos) {

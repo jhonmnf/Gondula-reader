@@ -26,10 +26,10 @@ async function handleBuscarProduto(termo) {
   }
 
   if (Array.isArray(result.data)) {
-    UI.mensagem('Produtos encontrados.');
+    UI.mensagem('Produtos encontrados.', 'sucesso');
     UI.exibirListaProdutos(result.data);
   } else {
-    UI.mensagem('Produto encontrado.');
+    UI.mensagem('Produto encontrado.', 'sucesso');
     UI.exibirProduto(result.data);
     produtoAtual = result.data;
     camera.encerrar();
@@ -58,7 +58,7 @@ async function efetuarRegistro(operator) {
   try {
     const result = await API.registrarConferencia(payload);
     if (result.success) {
-      UI.mensagem(`${rotulos[statusPendente]}. Registro salvo no servidor.`);
+      UI.mensagem(`${rotulos[statusPendente]}. Registro salvo no servidor.`, 'sucesso');
     } else {
       throw new Error(result.error);
     }
@@ -176,6 +176,6 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-wo
 window.addEventListener('load', async () => {
   const syncResult = await API.sincronizarDadosOffline();
   if (syncResult?.success) {
-    UI.mensagem(`Sincronizados ${syncResult.count} registros offline.`);
+    UI.mensagem(`Sincronizados ${syncResult.count} registros offline.`, 'sucesso');
   }
 });

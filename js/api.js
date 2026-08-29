@@ -1,11 +1,29 @@
 const SERVER_URL = ''; // Relative paths for Vercel Functions
+const API_KEY = 'gondula-secret-key'; // This should match the API_SECRET environment variable
+
+async function authenticatedFetch(url, options = {}) {
+  const defaultHeaders = {
+    'X-API-Key': API_KEY,
+    'Content-Type': 'application/json'
+  };
+
+  const mergedHeaders = {
+    ...defaultHeaders,
+    ...options.headers
+  };
+
+  return fetch(url, {
+    ...options,
+    headers: mergedHeaders
+  });
+}
 
 export async function buscarProduto(termo) {
   const termoLimpo = termo.trim();
   if (!termoLimpo) return { error: 'Informe o código ou nome do produto.' };
 
   try {
-    const response = await fetch(`${SERVER_URL}/api/product/${termoLimpo}`, {
+    const response = await authenticatedFetch(`${SERVER_URL}/api/product/${termoLimpo}`, {
       mode: 'cors',
       cache: 'no-cache'
     });
@@ -24,9 +42,8 @@ export async function buscarProduto(termo) {
 
 export async function registrarConferencia(payload) {
   try {
-    const response = await fetch(`${SERVER_URL}/api/conference`, {
+    const response = await authenticatedFetch(`${SERVER_URL}/api/conference`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
@@ -48,9 +65,8 @@ export async function sincronizarDadosOffline() {
   const restantes = [];
   for (const [index, payload] of registros.entries()) {
     try {
-      const response = await fetch(`${SERVER_URL}/api/conference`, {
+      const response = await authenticatedFetch(`${SERVER_URL}/api/conference`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -74,9 +90,8 @@ export async function sincronizarDadosOffline() {
 
 export async function validarAdmin(usuario, senha) {
   try {
-    const response = await fetch(`${SERVER_URL}/api/auth-admin`, {
+    const response = await authenticatedFetch(`${SERVER_URL}/api/auth-admin`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ usuario, senha })
     });
     return response.ok;
