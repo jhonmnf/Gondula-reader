@@ -42,7 +42,7 @@ export async function buscarProduto(termo) {
   if (!termoLimpo) return { error: 'Informe o código ou nome do produto.' };
 
   try {
-    const response = await authenticatedFetch(`${SERVER_URL}/api/product/${termoLimpo}`, {
+    const response = await authenticatedFetch(`${SERVER_URL}/api/get-products?q=${encodeURIComponent(termoLimpo)}`, {
       mode: 'cors',
       cache: 'no-cache'
     });
@@ -50,12 +50,12 @@ export async function buscarProduto(termo) {
     if (!response.ok) throw new Error('Erro na resposta do servidor');
 
     const resultado = await response.json();
-    if (!resultado.success) throw new Error('Produto não encontrado');
+    if (!resultado.success) throw new Error('Erro ao processar busca');
 
     return { data: resultado.data };
   } catch (err) {
-    console.error('Erro de conexão:', err);
-    return { error: err.message || 'Erro de conexão com o servidor.' };
+    console.error('Erro de conexão (busca site):', err);
+    return { error: err.message || 'Erro de conexão com o servidor de busca.' };
   }
 }
 

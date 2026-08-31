@@ -7,7 +7,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const targetUrl = 'https://comercialsimonini.com.br/shop/';
+    const { q } = req.query;
+    // Se houver um termo de busca (q), usamos a busca do site. Caso contrário, pegamos a loja geral.
+    const targetUrl = q
+      ? `https://comercialsimonini.com.br/?s=${encodeURIComponent(q)}`
+      : 'https://comercialsimonini.com.br/shop/';
+
     const response = await fetch(targetUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -24,8 +29,6 @@ export default async function handler(req, res) {
     const $ = cheerio.load(html);
     const products = [];
 
-    // Baseado na investigação, cada produto está dentro de .fusion-product-content ou similar
-    // Vamos iterar sobre os containers de produtos
     $('.fusion-product-content').each((i, element) => {
       try {
         const titleElement = $(element).find('h3.product-title a');
@@ -36,8 +39,6 @@ export default async function handler(req, res) {
           const priceStr = priceElement.text().trim();
           const link = titleElement.attr('href');
 
-          // Lógica de correção de preço: Preço Loja Física = Preço do Site / 1.1
-          // Remove tudo que não é dígito ou vírgula
           const numericString = priceStr.replace(/[^\d,]/g, '').replace(',', '.');
           const sitePrice = parseFloat(numericString);
 
@@ -48,7 +49,7 @@ export default async function handler(req, res) {
               nome: name,
               preco: physicalPrice,
               link: link,
-              codigo: `SCRAPE-${i + 1}` // Código temporário para o teste
+              codigo: `SITE-${i + 1}`
             });
           }
         }
