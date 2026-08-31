@@ -1,8 +1,16 @@
-import { supabase } from './_lib/supabase';
+const { supabase } = require('./_lib/supabase');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // API Security Check
-  if (req.headers['x-api-key'] !== process.env.API_SECRET) {
+  const apiKey = req.headers['x-api-key'];
+  const secret = process.env.API_SECRET;
+
+  if (!secret) {
+    console.error('ERRO: API_SECRET não configurada no ambiente da Vercel');
+    return res.status(500).json({ success: false, message: 'Erro de configuração no servidor' });
+  }
+
+  if (apiKey !== secret) {
     return res.status(401).json({ success: false, message: 'Não autorizado' });
   }
 
@@ -39,7 +47,7 @@ export default async function handler(req, res) {
     console.error('Erro ao salvar conferência no Supabase:', error);
     return res.status(500).json({
       success: false,
-      message: 'Erro interno do servidor'
+      message: `Erro interno do servidor: ${error.message}`
     });
   }
 }
