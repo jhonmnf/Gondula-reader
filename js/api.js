@@ -18,6 +18,25 @@ async function authenticatedFetch(url, options = {}) {
   });
 }
 
+export async function fetchAllProducts() {
+  try {
+    const response = await authenticatedFetch(`${SERVER_URL}/api/get-products`, {
+      mode: 'cors',
+      cache: 'no-cache'
+    });
+
+    if (!response.ok) throw new Error('Erro na resposta do servidor');
+
+    const resultado = await response.json();
+    if (!resultado.success) throw new Error('Erro ao coletar produtos');
+
+    return { data: resultado.data };
+  } catch (err) {
+    console.error('Erro de conexão (scrape):', err);
+    return { error: err.message || 'Erro de conexão com o servidor de scraping.' };
+  }
+}
+
 export async function buscarProduto(termo) {
   const termoLimpo = termo.trim();
   if (!termoLimpo) return { error: 'Informe o código ou nome do produto.' };
