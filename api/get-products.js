@@ -1,14 +1,21 @@
-import cheerio from 'cheerio';
+const cheerio = require('cheerio');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // API Security Check
-  if (req.headers['x-api-key'] !== process.env.API_SECRET) {
+  const apiKey = req.headers['x-api-key'];
+  const secret = process.env.API_SECRET;
+
+  if (!secret) {
+    console.error('ERRO: API_SECRET não configurada no ambiente da Vercel');
+    return res.status(500).json({ success: false, message: 'Erro de configuração no servidor' });
+  }
+
+  if (apiKey !== secret) {
     return res.status(401).json({ success: false, message: 'Não autorizado' });
   }
 
   try {
     const { q } = req.query;
-    // Se houver um termo de busca (q), usamos a busca do site. Caso contrário, pegamos a loja geral.
     const targetUrl = q
       ? `https://comercialsimonini.com.br/?s=${encodeURIComponent(q)}`
       : 'https://comercialsimonini.com.br/shop/';
