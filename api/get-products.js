@@ -8,10 +8,16 @@ export default async function handler(req, res) {
 
   try {
     const targetUrl = 'https://comercialsimonini.com.br/shop/';
-    const response = await fetch(targetUrl);
+    const response = await fetch(targetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+      }
+    });
 
     if (!response.ok) {
-      throw new Error(`Erro ao acessar o site: ${response.statusText}`);
+      throw new Error(`Erro ao acessar o site: ${response.status} ${response.statusText}`);
     }
 
     const html = await response.text();
@@ -60,7 +66,7 @@ export default async function handler(req, res) {
     console.error('Erro no scraping:', error);
     return res.status(500).json({
       success: false,
-      message: 'Erro interno ao coletar produtos do site'
+      message: `Erro interno ao coletar produtos do site: ${error.message}`
     });
   }
 }
