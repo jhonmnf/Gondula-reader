@@ -1,6 +1,6 @@
-import { supabase } from './_lib/supabase';
+const { supabase } = require('../_lib/supabase');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // API Security Check
   if (req.headers['x-api-key'] !== process.env.API_SECRET) {
     return res.status(401).json({ success: false, message: 'Não autorizado' });

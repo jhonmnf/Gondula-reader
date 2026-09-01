@@ -18,13 +18,36 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ success: false, message: 'Método não permitido' });
   }
 
-  const { codigo, nome, status, em, operator } = req.body;
+  const { codigo, nome, detalhe, preco, status, em, operator } = req.body;
 
   if (!codigo || !status) {
     return res.status(400).json({ success: false, message: 'Dados insuficientes' });
   }
 
   try {
+    const { data: produtoExistente, error: erroAoBuscarProduto } = await supabase
+      .from('products')
+      .select('codigo')
+      .eq('codigo', codigo)
+      .maybeSingle();
+
+    if (erroAoBuscarProduto) throw erroAoBuscarProduto;
+
+    if (!produtoExistente) {
+      if (!nome || !Number.isFinite(preco)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Não foi possível cadastrar o produto antes da conferência.'
+        });
+      }
+
+      const { error: erroAoCadastrarProduto } = await supabase
+        .from('products')
+        .insert([{ codigo, nome, detalhe: detalhe || '', preco }]);
+
+      if (erroAoCadastrarProduto) throw erroAoCadastrarProduto;
+    }
+
     const { error } = await supabase
       .from('conferences')
       .insert([

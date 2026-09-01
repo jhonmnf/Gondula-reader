@@ -1,6 +1,21 @@
 const cheerio = require('cheerio');
 const PRODUCTS_URL = 'https://comercialsimonini.com.br/todos-os-produtos/';
 
+function gerarCodigoProduto(nome, link, indice) {
+  const codigoNoNome = nome.match(/^([a-z]+\d+[a-z0-9/-]*)\b/i);
+  if (codigoNoNome) return codigoNoNome[1].toUpperCase();
+
+  try {
+    const partesDoLink = new URL(link).pathname.split('/').filter(Boolean);
+    const identificador = partesDoLink.at(-1);
+    if (identificador) return `SITE-${identificador}`.toUpperCase();
+  } catch {
+    // Usa um código alternativo quando o produto não tem link válido.
+  }
+
+  return `SITE-PRODUTO-${indice + 1}`;
+}
+
 module.exports = async function handler(req, res) {
   // API Security Check
   const apiKey = req.headers['x-api-key'];
@@ -57,7 +72,8 @@ module.exports = async function handler(req, res) {
               nome: name,
               preco: physicalPrice,
               link: link,
-              codigo: `SITE-${i + 1}`
+              detalhe: '',
+              codigo: gerarCodigoProduto(name, link, i)
             });
           }
         }

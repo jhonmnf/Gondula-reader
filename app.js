@@ -48,6 +48,8 @@ async function efetuarRegistro(operator) {
   const payload = {
     codigo: produtoAtual.codigo,
     nome: produtoAtual.nome,
+    detalhe: produtoAtual.detalhe || '',
+    preco: produtoAtual.preco,
     status: statusPendente,
     operator: operator,
     em: new Date().toISOString()
