@@ -89,7 +89,18 @@
         <label for="usuario-admin">Usuário</label>
         <input id="usuario-admin" autocomplete="username" required />
         <label for="senha-admin">Senha</label>
-        <input id="senha-admin" type="password" autocomplete="current-password" required />
+        <div class="campo-senha">
+          <input id="senha-admin" type="password" autocomplete="current-password" required />
+          <button
+            class="campo-senha__alternar"
+            id="botao-mostrar-senha"
+            type="button"
+            aria-label="Mostrar senha"
+            aria-pressed="false"
+          >
+            <span aria-hidden="true">👁</span>
+          </button>
+        </div>
         <p class="erro" id="erro-admin" role="alert"></p>
         <button class="botao botao--principal" type="submit">Autorizar</button>
       </form>

@@ -139,6 +139,28 @@ document.querySelector('#botao-fechar-admin').addEventListener('click', () => {
   document.querySelector('#erro-admin').textContent = '';
 });
 
+const campoSenhaAdmin = document.querySelector('#senha-admin');
+const botaoMostrarSenha = document.querySelector('#botao-mostrar-senha');
+
+function ocultarSenhaAdmin() {
+  campoSenhaAdmin.type = 'password';
+  botaoMostrarSenha.querySelector('span').textContent = '👁';
+  botaoMostrarSenha.setAttribute('aria-label', 'Mostrar senha');
+  botaoMostrarSenha.setAttribute('aria-pressed', 'false');
+}
+
+botaoMostrarSenha.addEventListener('click', evento => {
+  const senha = campoSenhaAdmin;
+  const senhaEstaVisivel = senha.type === 'text';
+
+  senha.type = senhaEstaVisivel ? 'password' : 'text';
+  evento.currentTarget.querySelector('span').textContent = senhaEstaVisivel ? '👁' : '🙈';
+  evento.currentTarget.setAttribute('aria-label', senhaEstaVisivel ? 'Mostrar senha' : 'Ocultar senha');
+  evento.currentTarget.setAttribute('aria-pressed', String(!senhaEstaVisivel));
+});
+
+document.querySelector('#modal-admin').addEventListener('close', ocultarSenhaAdmin);
+
 function tentarSairDoKiosk() {
   if (window.fully) {
     try { window.fully.executeCommand('exit_kiosk_mode'); } catch (e) {}
