@@ -14,14 +14,10 @@ export class CameraManager {
 
     const video = document.querySelector('#video');
     try {
-      const constraints = {
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false
-      };
-
-      this.streamCamera = await navigator.mediaDevices.getUserMedia(constraints);
+      this.streamCamera = await this.obterCameraParaLeitura();
       video.srcObject = this.streamCamera;
       await video.play();
+      await this.ativarFocoContinuo();
 
       if ('BarcodeDetector' in window) {
         this.iniciarLeituraNativa();
@@ -31,7 +27,44 @@ export class CameraManager {
         throw new Error('Leitor de código de barras não suportado.');
       }
     } catch (err) {
+      this.encerrar();
       throw err;
+    }
+  }
+
+  async obterCameraParaLeitura() {
+    const video = {
+      width: { ideal: 1920 },
+      height: { ideal: 1080 },
+      frameRate: { ideal: 30 },
+      resizeMode: { ideal: 'none' }
+    };
+
+    try {
+      return await navigator.mediaDevices.getUserMedia({
+        video: { ...video, facingMode: { exact: 'environment' } },
+        audio: false
+      });
+    } catch (err) {
+      if (!['OverconstrainedError', 'NotFoundError'].includes(err.name)) throw err;
+
+      return navigator.mediaDevices.getUserMedia({
+        video: { ...video, facingMode: { ideal: 'environment' } },
+        audio: false
+      });
+    }
+  }
+
+  async ativarFocoContinuo() {
+    const [trilha] = this.streamCamera?.getVideoTracks() || [];
+    const capacidades = trilha?.getCapabilities?.();
+
+    if (!capacidades?.focusMode?.includes('continuous')) return;
+
+    try {
+      await trilha.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+    } catch (err) {
+      console.warn('Não foi possível ativar o foco contínuo da câmera.', err);
     }
   }
 

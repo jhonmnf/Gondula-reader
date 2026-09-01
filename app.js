@@ -130,6 +130,20 @@ document.querySelector('#formulario-operador').addEventListener('submit', evento
   document.querySelector('#nome-operador').value = '';
 });
 
+const modalOperador = document.querySelector('#modal-operador');
+
+function cancelarRegistroPendente() {
+  statusPendente = null;
+  document.querySelector('#nome-operador').value = '';
+}
+
+document.querySelector('#botao-fechar-operador').addEventListener('click', () => {
+  cancelarRegistroPendente();
+  modalOperador.close();
+});
+
+modalOperador.addEventListener('cancel', cancelarRegistroPendente);
+
 document.querySelector('#botao-sair').addEventListener('click', () => {
   document.querySelector('#modal-admin').showModal();
 });
