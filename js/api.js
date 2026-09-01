@@ -18,6 +18,15 @@ async function authenticatedFetch(url, options = {}) {
   });
 }
 
+async function mensagemDoErro(response, padrao) {
+  try {
+    const resultado = await response.json();
+    return resultado.message || padrao;
+  } catch {
+    return padrao;
+  }
+}
+
 export async function fetchAllProducts() {
   try {
     const response = await authenticatedFetch(`${SERVER_URL}/api/get-products`, {
@@ -25,7 +34,7 @@ export async function fetchAllProducts() {
       cache: 'no-cache'
     });
 
-    if (!response.ok) throw new Error('Erro na resposta do servidor');
+    if (!response.ok) throw new Error(await mensagemDoErro(response, 'Não foi possível buscar os produtos.'));
 
     const resultado = await response.json();
     if (!resultado.success) throw new Error('Erro ao coletar produtos');
@@ -47,7 +56,7 @@ export async function buscarProduto(termo) {
       cache: 'no-cache'
     });
 
-    if (!response.ok) throw new Error('Erro na resposta do servidor');
+    if (!response.ok) throw new Error(await mensagemDoErro(response, 'Não foi possível buscar o produto.'));
 
     const resultado = await response.json();
     if (!resultado.success) throw new Error('Erro ao processar busca');
@@ -66,7 +75,7 @@ export async function registrarConferencia(payload) {
       body: JSON.stringify(payload)
     });
 
-    if (!response.ok) throw new Error('Erro no servidor');
+    if (!response.ok) throw new Error(await mensagemDoErro(response, 'Não foi possível salvar a conferência.'));
 
     return { success: true };
   } catch (err) {
@@ -88,7 +97,9 @@ export async function sincronizarDadosOffline() {
         method: 'POST',
         body: JSON.stringify(payload)
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        throw new Error(await mensagemDoErro(response, `Erro no servidor (${response.status})`));
+      }
       console.log(`[Sincronização] Registro ${index + 1}/${registros.length} enviado com sucesso.`);
     } catch (err) {
       console.error(`[Sincronização] Falha ao enviar registro ${index + 1}:`, err);
