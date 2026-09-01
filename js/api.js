@@ -27,25 +27,6 @@ async function mensagemDoErro(response, padrao) {
   }
 }
 
-export async function fetchAllProducts() {
-  try {
-    const response = await authenticatedFetch(`${SERVER_URL}/api/get-products`, {
-      mode: 'cors',
-      cache: 'no-cache'
-    });
-
-    if (!response.ok) throw new Error(await mensagemDoErro(response, 'Não foi possível buscar os produtos.'));
-
-    const resultado = await response.json();
-    if (!resultado.success) throw new Error('Erro ao coletar produtos');
-
-    return { data: resultado.data };
-  } catch (err) {
-    console.error('Erro de conexão (scrape):', err);
-    return { error: err.message || 'Erro de conexão com o servidor de scraping.' };
-  }
-}
-
 export async function buscarProduto(termo) {
   const termoLimpo = termo.trim();
   if (!termoLimpo) return { error: 'Informe o código ou nome do produto.' };

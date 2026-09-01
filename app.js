@@ -76,21 +76,6 @@ async function efetuarRegistro(operator) {
 }
 
 // Event Listeners
-document.querySelector('#botao-atualizar-produtos').addEventListener('click', async () => {
-  UI.mensagem('Sincronizando produtos do site... Aguarde.');
-  const result = await API.fetchAllProducts();
-
-  if (result.error) {
-    UI.mensagem(result.error, 'erro');
-    return;
-  }
-
-  UI.mensagem(`${result.data.length} produtos sincronizados!`, 'sucesso');
-  UI.exibirListaProdutos(result.data);
-  UI.setHidden('#lista-resultados', false);
-  UI.setHidden('#leitura', true);
-});
-
 document.querySelector('#botao-voltar-busca').addEventListener('click', () => {
   UI.setHidden('#lista-resultados', true);
   UI.setHidden('#leitura', false);
