@@ -1,6 +1,17 @@
 import { validarAdmin } from './js/api.js';
 import { loginUser } from './js/auth.js';
 
+const campoSenha = document.querySelector('#senha');
+const botaoMostrarSenha = document.querySelector('#botao-mostrar-senha');
+
+botaoMostrarSenha.addEventListener('click', () => {
+  const mostrarSenha = campoSenha.type === 'password';
+  campoSenha.type = mostrarSenha ? 'text' : 'password';
+  botaoMostrarSenha.setAttribute('aria-pressed', String(mostrarSenha));
+  botaoMostrarSenha.setAttribute('aria-label', mostrarSenha ? 'Esconder senha' : 'Mostrar senha');
+  botaoMostrarSenha.querySelector('span').textContent = mostrarSenha ? '🙈' : '👁';
+});
+
 document.querySelector('#formulario-login').addEventListener('submit', async evento => {
   evento.preventDefault();
 
