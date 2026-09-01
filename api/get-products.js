@@ -1,4 +1,5 @@
 const cheerio = require('cheerio');
+const PRODUCTS_URL = 'https://comercialsimonini.com.br/todos-os-produtos/';
 
 module.exports = async function handler(req, res) {
   // API Security Check
@@ -17,8 +18,8 @@ module.exports = async function handler(req, res) {
   try {
     const { q } = req.query;
     const targetUrl = q
-      ? `https://comercialsimonini.com.br/?s=${encodeURIComponent(q)}`
-      : 'https://comercialsimonini.com.br/shop/';
+      ? `${PRODUCTS_URL}?s=${encodeURIComponent(q)}`
+      : PRODUCTS_URL;
 
     const response = await fetch(targetUrl, {
       headers: {
