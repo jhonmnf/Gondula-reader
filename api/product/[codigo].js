@@ -1,19 +1,19 @@
 const { supabase } = require('../_lib/supabase');
+const { exigirSessao } = require('../_lib/auth');
+const { validarTermoDeBusca } = require('../_lib/validation');
 
 module.exports = async function handler(req, res) {
-  // API Security Check
-  if (req.headers['x-api-key'] !== process.env.API_SECRET) {
-    return res.status(401).json({ success: false, message: 'Não autorizado' });
-  }
+  if (req.method !== 'GET') return res.status(405).json({ success: false, message: 'Método não permitido.' });
+  if (!exigirSessao(req, res)) return;
 
-  const { codigo } = req.query;
-  const termo = codigo.trim().toLowerCase();
+  const termo = validarTermoDeBusca(req.query.codigo);
+  if (!termo) return res.status(400).json({ success: false, message: 'Código ou nome inválido.' });
 
   try {
     // 1. Busca exata por código
     const { data: exactData } = await supabase
       .from('products')
-      .select('*')
+      .select('codigo,nome,detalhe,preco')
       .eq('codigo', termo)
       .single();
 
@@ -27,8 +27,9 @@ module.exports = async function handler(req, res) {
     // 2. Busca por código (sufixo) ou por nome (parcial)
     const { data: matches } = await supabase
       .from('products')
-      .select('*')
-      .or(`codigo.ilike.%${termo},nome.ilike.%${termo}%`);
+      .select('codigo,nome,detalhe,preco')
+      .or(`codigo.ilike.%${termo},nome.ilike.%${termo}%`)
+      .limit(20);
 
     if (matches && matches.length > 0) {
       if (matches.length === 1) {

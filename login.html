@@ -33,7 +33,7 @@
             <input id="usuario" autocomplete="username" required placeholder="Usuário" />
           </div>
 
-          <label for="senha" style="margin-top: 1rem; display: block;">Senha</label>
+          <label class="login__senha-label" for="senha">Senha</label>
           <div class="busca__linha">
             <input id="senha" type="password" autocomplete="current-password" required placeholder="Senha" />
             <button id="botao-mostrar-senha" type="button" aria-label="Mostrar senha" aria-pressed="false">
@@ -41,11 +41,11 @@
             </button>
           </div>
 
-          <button type="submit" class="botao botao--principal" style="margin-top: 2rem; width: 100%;">
+          <button type="submit" class="botao botao--principal login__entrar">
             Entrar
           </button>
         </form>
-        <p id="erro-login" class="mensagem" role="alert" style="text-align: center; margin-top: 1rem;"></p>
+        <p id="erro-login" class="mensagem login__erro" role="alert"></p>
       </section>
     </main>
     <script type="module" src="login.js"></script>

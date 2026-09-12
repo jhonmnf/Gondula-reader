@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#a5c6ff" />
+    <link rel="icon" href="icone.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>Conferências realizadas | Gôndula Reader</title>
+  </head>
+  <body>
+    <main class="aplicativo historico">
+      <header class="cabecalho">
+        <div class="marca">
+          <span class="marca__icone" aria-hidden="true">✓</span>
+          <div>
+            <p class="marca__nome">Gôndula Reader</p>
+            <p class="marca__subtitulo">Histórico de conferências</p>
+          </div>
+        </div>
+      </header>
+
+      <a class="historico__voltar" href="index.html">← Voltar à conferência</a>
+      <section class="leitura" aria-labelledby="titulo-historico">
+        <p class="etiqueta">REGISTROS SALVOS</p>
+        <h1 id="titulo-historico">Conferências realizadas</h1>
+        <p class="historico__descricao">Veja os registros sincronizados, dos mais recentes aos mais antigos. Registros offline aparecem após o envio ao servidor.</p>
+        <form id="filtros-historico" class="historico__filtros">
+          <div>
+            <label for="filtro-status">Resultado</label>
+            <select id="filtro-status" name="status">
+              <option value="">Todos</option>
+              <option value="correta">Correta</option>
+              <option value="divergente">Divergente</option>
+              <option value="ausente">Ausente</option>
+            </select>
+          </div>
+          <button class="botao botao--principal" id="atualizar-historico" type="submit">Atualizar</button>
+        </form>
+        <p id="mensagem-historico" class="historico__mensagem" role="status" aria-live="polite"></p>
+        <p id="total-historico" class="historico__total" hidden></p>
+        <ol id="lista-conferencias" class="historico__lista" aria-label="Conferências realizadas"></ol>
+        <nav id="paginacao-historico" class="historico__paginacao" aria-label="Páginas do histórico" hidden>
+          <button class="botao" id="pagina-anterior" type="button">← Anterior</button>
+          <span id="pagina-historico"></span>
+          <button class="botao" id="pagina-proxima" type="button">Próxima →</button>
+        </nav>
+      </section>
+    </main>
+    <script type="module" src="js/conferencias.js"></script>
+  </body>
+</html>

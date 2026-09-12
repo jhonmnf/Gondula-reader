@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Sistema de conferência de etiquetas de gôndula",
   "main": "index.js",
+  "scripts": {
+    "test": "node --test test/auth.test.js test/validation.test.js test/conferences.test.js"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
     "cheerio": "^1.2.0"

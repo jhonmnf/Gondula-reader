@@ -10,7 +10,7 @@
     <title>Gôndula Reader</title>
   </head>
   <body>
-    <main class="aplicativo" aria-live="polite">
+    <main class="aplicativo">
       <header class="cabecalho">
         <div class="marca">
           <span class="marca__icone" aria-hidden="true">✓</span>
@@ -21,6 +21,10 @@
         </div>
         <button class="botao-icone" id="botao-sair" type="button" aria-label="Sair">⌧</button>
       </header>
+
+      <nav class="navegacao-principal" aria-label="Navegação principal">
+        <a href="conferencias.html">Ver conferências realizadas →</a>
+      </nav>
 
       <section class="boas-vindas" id="estado-inicial">
         <p class="etiqueta">LOJA FÍSICA</p>
@@ -41,6 +45,11 @@
               </div>
               <div class="camera__tracking-box" id="tracking-box" hidden></div>
             </div>
+          </div>
+          <div class="camera__controles" id="controles-zoom-camera" hidden>
+            <label for="controle-zoom-camera">Zoom</label>
+            <input id="controle-zoom-camera" type="range" step="0.1" />
+            <output id="valor-zoom-camera" for="controle-zoom-camera"></output>
           </div>
           <p>Centralize o código e ajuste a distância até as barras ficarem nítidas.</p>
           <button class="botao botao--texto" id="botao-fechar-camera" type="button">Fechar câmera</button>
@@ -67,7 +76,10 @@
           <span class="produto__codigo" id="codigo-produto"></span>
         </div>
         <h2 id="nome-produto"></h2>
-        <p class="produto__detalhe" id="detalhe-produto"></p>
+        <details class="produto__detalhes" id="detalhes-produto">
+          <summary>Detalhes do produto</summary>
+          <p class="produto__detalhe" id="detalhe-produto"></p>
+        </details>
         <p class="produto__preco" id="preco-produto"></p>
         <div class="acoes" aria-label="Resultado da conferência">
           <button class="acao acao--correta" data-status="correta" type="button">✓ Correta</button>
@@ -78,6 +90,7 @@
       </section>
 
       <p id="mensagem" class="mensagem" role="status"></p>
+      <p id="pendencias-offline" class="pendencias-offline" role="status" hidden></p>
     </main>
 
     <dialog class="modal" id="modal-admin" aria-labelledby="titulo-admin">
@@ -124,7 +137,11 @@
       <p>Acesso autorizado.</p>
       <button class="botao botao--principal" id="botao-retomar" type="button">Retomar conferência</button>
     </section>
-    <script src="https://unpkg.com/@zxing/browser@0.1.5"></script>
+    <script
+      src="https://unpkg.com/@zxing/browser@0.1.5"
+      integrity="sha384-ylLhng89kD62+PVK1cjm4rAYg69zDlGrbbSfAE2Eb8Xqf8RoAQCMcRoUXZh7pAPC"
+      crossorigin="anonymous"
+    ></script>
     <script type="module" src="app.js"></script>
   </body>
 </html>

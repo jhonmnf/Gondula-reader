@@ -41,19 +41,23 @@ export function exibirListaProdutos(produtos) {
   container.innerHTML = '';
 
   produtos.forEach(p => {
-    const item = document.createElement('div');
+    const item = document.createElement('button');
+    item.type = 'button';
     item.className = 'produto-item';
-    item.innerHTML = `
-      <span class="nome">${p.nome}</span>
-      <div class="info">
-        <span>${p.codigo}</span>
-        <span class="preco">${formatarPreco(p.preco)}</span>
-      </div>
-    `;
-    item.onclick = () => {
-        // Emit custom event to be handled by app.js
-        window.dispatchEvent(new CustomEvent('produto-selecionado', { detail: p }));
-    };
+    const nome = document.createElement('span');
+    nome.className = 'nome';
+    nome.textContent = p.nome;
+    const info = document.createElement('span');
+    info.className = 'info';
+    const codigo = document.createElement('span');
+    codigo.textContent = p.codigo;
+    const preco = document.createElement('span');
+    preco.className = 'preco';
+    preco.textContent = formatarPreco(p.preco);
+
+    info.append(codigo, preco);
+    item.append(nome, info);
+    item.addEventListener('click', () => window.dispatchEvent(new CustomEvent('produto-selecionado', { detail: p })));
     container.appendChild(item);
   });
 
@@ -68,6 +72,7 @@ export function exibirProduto(produto) {
   document.querySelector('#codigo-produto').textContent = produto.codigo;
   document.querySelector('#nome-produto').textContent = produto.nome;
   document.querySelector('#detalhe-produto').textContent = produto.detalhe;
+  document.querySelector('#detalhes-produto').hidden = !produto.detalhe;
   document.querySelector('#preco-produto').textContent = formatarPreco(produto.preco);
 
   const elProduto = document.querySelector('#produto');

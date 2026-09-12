@@ -68,6 +68,29 @@ export class CameraManager {
     }
   }
 
+  obterFaixaDeZoom() {
+    const [trilha] = this.streamCamera?.getVideoTracks() || [];
+    const zoom = trilha?.getCapabilities?.().zoom;
+    if (!zoom) return null;
+
+    return {
+      min: zoom.min,
+      max: zoom.max,
+      step: zoom.step || 0.1,
+      atual: trilha.getSettings().zoom || zoom.min
+    };
+  }
+
+  async ajustarZoom(valor) {
+    const [trilha] = this.streamCamera?.getVideoTracks() || [];
+    const faixa = this.obterFaixaDeZoom();
+    if (!trilha || !faixa) return false;
+
+    const zoom = Math.min(faixa.max, Math.max(faixa.min, Number(valor)));
+    await trilha.applyConstraints({ advanced: [{ zoom }] });
+    return true;
+  }
+
   async iniciarLeituraNativa() {
     try {
       const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'upc_a'] });

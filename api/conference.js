@@ -1,28 +1,20 @@
 const { supabase } = require('./_lib/supabase');
+const { exigirSessao } = require('./_lib/auth');
+const { validarConferencia } = require('./_lib/validation');
 
 module.exports = async function handler(req, res) {
-  // API Security Check
-  const apiKey = req.headers['x-api-key'];
-  const secret = process.env.API_SECRET;
-
-  if (!secret) {
-    console.error('ERRO: API_SECRET não configurada no ambiente da Vercel');
-    return res.status(500).json({ success: false, message: 'Erro de configuração no servidor' });
-  }
-
-  if (apiKey !== secret) {
-    return res.status(401).json({ success: false, message: 'Não autorizado' });
-  }
-
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Método não permitido' });
   }
 
-  const { codigo, nome, detalhe, preco, status, em, operator } = req.body;
+  if (!exigirSessao(req, res)) return;
 
-  if (!codigo || !status) {
-    return res.status(400).json({ success: false, message: 'Dados insuficientes' });
+  const resultadoDaValidacao = validarConferencia(req.body || {});
+  if (resultadoDaValidacao.error) {
+    return res.status(400).json({ success: false, message: resultadoDaValidacao.error });
   }
+
+  const { codigo, nome, detalhe, preco, status, em, operator } = resultadoDaValidacao.data;
 
   try {
     const { data: produtoExistente, error: erroAoBuscarProduto } = await supabase
@@ -34,7 +26,7 @@ module.exports = async function handler(req, res) {
     if (erroAoBuscarProduto) throw erroAoBuscarProduto;
 
     if (!produtoExistente) {
-      if (!nome || !Number.isFinite(preco)) {
+      if (!nome) {
         return res.status(400).json({
           success: false,
           message: 'Não foi possível cadastrar o produto antes da conferência.'
@@ -70,7 +62,7 @@ module.exports = async function handler(req, res) {
     console.error('Erro ao salvar conferência no Supabase:', error);
     return res.status(500).json({
       success: false,
-      message: `Erro interno do servidor: ${error.message}`
+      message: 'Não foi possível registrar a conferência.'
     });
   }
 }

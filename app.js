@@ -3,12 +3,16 @@ import * as UI from './js/ui.js';
 import { CameraManager } from './js/camera.js';
 import * as Auth from './js/auth.js';
 
-if (!Auth.isUserLoggedIn()) {
-  window.location.href = 'login.html';
+if (!(await Auth.isUserLoggedIn())) {
+  window.location.replace('login.html');
 }
 
 let produtoAtual = null;
 let statusPendente = null;
+let registroEmAndamento = false;
+const controlesZoomCamera = document.querySelector('#controles-zoom-camera');
+const controleZoomCamera = document.querySelector('#controle-zoom-camera');
+const valorZoomCamera = document.querySelector('#valor-zoom-camera');
 const camera = new CameraManager(async (codigo) => {
   document.querySelector('#campo-busca').value = codigo;
   await handleBuscarProduto(codigo);
@@ -26,6 +30,13 @@ async function handleBuscarProduto(termo) {
   }
 
   if (Array.isArray(result.data)) {
+    camera.encerrar();
+    if (result.data.length === 0) {
+      UI.setHidden('#lista-resultados', true);
+      UI.setHidden('#leitura', false);
+      UI.mensagem('Nenhum produto encontrado. Tente outro código ou nome.', 'aviso');
+      return;
+    }
     UI.mensagem('Produtos encontrados.', 'sucesso');
     UI.exibirListaProdutos(result.data);
   } else {
@@ -36,10 +47,27 @@ async function handleBuscarProduto(termo) {
   }
 }
 
+function configurarZoomDaCamera() {
+  const faixa = camera.obterFaixaDeZoom();
+  if (!faixa) {
+    controlesZoomCamera.hidden = true;
+    return;
+  }
+
+  controleZoomCamera.min = faixa.min;
+  controleZoomCamera.max = faixa.max;
+  controleZoomCamera.step = faixa.step;
+  controleZoomCamera.value = faixa.atual;
+  valorZoomCamera.value = `${Number(faixa.atual).toFixed(1)}×`;
+  controlesZoomCamera.hidden = false;
+}
+
 async function registrarConferencia(status) {
   if (!produtoAtual) return;
   statusPendente = status;
-  document.querySelector('#modal-operador').showModal();
+  const modal = document.querySelector('#modal-operador');
+  modal.showModal();
+  requestAnimationFrame(() => document.querySelector('#nome-operador').focus());
 }
 
 async function efetuarRegistro(operator) {
@@ -106,6 +134,7 @@ document.querySelector('#botao-camera').addEventListener('click', async () => {
   UI.mensagem('Ativando câmera...');
   try {
     await camera.abrir();
+    configurarZoomDaCamera();
   } catch (err) {
     UI.mensagem(err.message, 'erro');
     camera.encerrar();
@@ -114,20 +143,40 @@ document.querySelector('#botao-camera').addEventListener('click', async () => {
 
 document.querySelector('#botao-fechar-camera').addEventListener('click', () => {
   camera.encerrar();
+  controlesZoomCamera.hidden = true;
   UI.setHidden('#camera', true);
+});
+
+controleZoomCamera.addEventListener('change', async evento => {
+  try {
+    const zoom = Number(evento.currentTarget.value);
+    if (await camera.ajustarZoom(zoom)) valorZoomCamera.value = `${zoom.toFixed(1)}×`;
+  } catch {
+    UI.mensagem('O aparelho não aceitou este nível de zoom.', 'aviso');
+  }
 });
 
 document.querySelectorAll('[data-status]').forEach(botao =>
   botao.addEventListener('click', () => registrarConferencia(botao.dataset.status))
 );
 
-document.querySelector('#formulario-operador').addEventListener('submit', evento => {
+document.querySelector('#formulario-operador').addEventListener('submit', async evento => {
   evento.preventDefault();
+  if (registroEmAndamento) return;
+
+  registroEmAndamento = true;
+  const botao = evento.currentTarget.querySelector('button[type="submit"]');
+  botao.disabled = true;
   const nome = document.querySelector('#nome-operador').value;
   Auth.setOperator(nome);
-  efetuarRegistro(nome);
-  document.querySelector('#modal-operador').close();
-  document.querySelector('#nome-operador').value = '';
+  try {
+    await efetuarRegistro(nome);
+    document.querySelector('#modal-operador').close();
+    document.querySelector('#nome-operador').value = '';
+  } finally {
+    registroEmAndamento = false;
+    botao.disabled = false;
+  }
 });
 
 const modalOperador = document.querySelector('#modal-operador');
@@ -146,6 +195,7 @@ modalOperador.addEventListener('cancel', cancelarRegistroPendente);
 
 document.querySelector('#botao-sair').addEventListener('click', () => {
   document.querySelector('#modal-admin').showModal();
+  requestAnimationFrame(() => document.querySelector('#usuario-admin').focus());
 });
 
 document.querySelector('#botao-fechar-admin').addEventListener('click', () => {
@@ -190,7 +240,7 @@ document.querySelector('#formulario-admin').addEventListener('submit', async eve
   const isValid = await API.validarAdmin(usuario, senha);
 
   if (isValid) {
-    Auth.logoutUser();
+    await Auth.logoutUser();
     document.querySelector('#modal-admin').close();
     document.querySelector('#tela-encerrada').hidden = false;
     tentarSairDoKiosk();
@@ -212,8 +262,19 @@ window.addEventListener('produto-selecionado', (e) => {
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');
 
 window.addEventListener('load', async () => {
+  const pendencias = document.querySelector('#pendencias-offline');
+  const quantidadePendente = API.quantidadeDeRegistrosOffline();
+  if (quantidadePendente > 0) {
+    pendencias.hidden = false;
+    pendencias.textContent = `${quantidadePendente} conferência(s) pendente(s) de sincronização.`;
+  }
+
   const syncResult = await API.sincronizarDadosOffline();
   if (syncResult?.success) {
+    pendencias.hidden = true;
     UI.mensagem(`Sincronizados ${syncResult.count} registros offline.`, 'sucesso');
+  } else if (syncResult?.remaining) {
+    pendencias.hidden = false;
+    pendencias.textContent = `${syncResult.remaining} conferência(s) aguardando conexão para sincronizar.`;
   }
 });

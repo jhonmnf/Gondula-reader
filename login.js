@@ -23,7 +23,7 @@ document.querySelector('#formulario-login').addEventListener('submit', async eve
     const isValid = await validarAdmin(usuario, senha);
     if (isValid) {
       loginUser();
-      window.location.href = 'index.html';
+      window.location.replace('index.html');
     } else {
       erroEl.textContent = 'Usuário ou senha incorretos.';
       erroEl.classList.add('mensagem--erro');

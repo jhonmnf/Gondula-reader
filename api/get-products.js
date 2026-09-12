@@ -1,4 +1,6 @@
 const PRODUCTS_API_URL = 'https://comercialsimonini.com.br/wp-json/wc/store/v1/products';
+const { exigirSessao } = require('./_lib/auth');
+const { validarTermoDeBusca } = require('./_lib/validation');
 
 function textoSemHtml(texto = '') {
   return texto.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -11,21 +13,11 @@ function precoEmReais(prices) {
 }
 
 module.exports = async function handler(req, res) {
-  // API Security Check
-  const apiKey = req.headers['x-api-key'];
-  const secret = process.env.API_SECRET;
-
-  if (!secret) {
-    console.error('ERRO: API_SECRET não configurada no ambiente da Vercel');
-    return res.status(500).json({ success: false, message: 'Erro de configuração no servidor' });
-  }
-
-  if (apiKey !== secret) {
-    return res.status(401).json({ success: false, message: 'Não autorizado' });
-  }
+  if (req.method !== 'GET') return res.status(405).json({ success: false, message: 'Método não permitido.' });
+  if (!exigirSessao(req, res)) return;
 
   try {
-    const termo = req.query.q?.trim();
+    const termo = validarTermoDeBusca(req.query.q);
     if (!termo) {
       return res.status(400).json({
         success: false,
@@ -41,13 +33,16 @@ module.exports = async function handler(req, res) {
     }
     const targetUrl = `${PRODUCTS_API_URL}?${parametros}`;
 
+    const controlador = new AbortController();
+    const timeout = setTimeout(() => controlador.abort(), 8_000);
     const response = await fetch(targetUrl, {
+      signal: controlador.signal,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json,text/plain,*/*',
         'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
       }
-    });
+    }).finally(() => clearTimeout(timeout));
 
     if (!response.ok) {
       throw new Error(`Erro ao acessar o site: ${response.status} ${response.statusText}`);
@@ -73,7 +68,7 @@ module.exports = async function handler(req, res) {
     console.error('Erro no scraping:', error);
     return res.status(500).json({
       success: false,
-      message: `Erro interno ao coletar produtos do site: ${error.message}`
+      message: 'Não foi possível consultar os produtos agora. Tente novamente.'
     });
   }
 }

@@ -1,19 +1,25 @@
-export function isUserLoggedIn() {
-  return localStorage.getItem('isLoggedIn') === 'true';
+export async function isUserLoggedIn() {
+  try {
+    const response = await fetch('/api/session', { credentials: 'same-origin', cache: 'no-store' });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 export function loginUser() {
-  localStorage.setItem('isLoggedIn', 'true');
+  return true;
 }
 
-export function logoutUser() {
-  localStorage.removeItem('isLoggedIn');
+export async function logoutUser() {
+  await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+  sessionStorage.removeItem('current_operator');
 }
 
 export function setOperator(name) {
-  localStorage.setItem('current_operator', name);
+  sessionStorage.setItem('current_operator', name);
 }
 
 export function getOperator() {
-  return localStorage.getItem('current_operator') || 'system';
+  return sessionStorage.getItem('current_operator') || 'system';
 }

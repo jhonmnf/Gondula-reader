@@ -1,21 +1,21 @@
-const SERVER_URL = ''; // Relative paths for Vercel Functions
-const API_KEY = 'gondula-secret-key'; // This should match the API_SECRET environment variable
+const SERVER_URL = '';
 
 async function authenticatedFetch(url, options = {}) {
-  const defaultHeaders = {
-    'X-API-Key': API_KEY,
-    'Content-Type': 'application/json'
-  };
-
-  const mergedHeaders = {
-    ...defaultHeaders,
-    ...options.headers
-  };
-
-  return fetch(url, {
+  const response = await fetch(url, {
     ...options,
-    headers: mergedHeaders
+    credentials: 'same-origin',
+    headers: {
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...options.headers
+    }
   });
+
+  if (response.status === 401 && url !== '/api/auth-admin') {
+    window.location.replace('login.html');
+    throw new Error('Sua sessão expirou.');
+  }
+
+  return response;
 }
 
 async function mensagemDoErro(response, padrao) {
@@ -25,6 +25,19 @@ async function mensagemDoErro(response, padrao) {
   } catch {
     return padrao;
   }
+}
+
+function lerRegistrosOffline() {
+  try {
+    const registros = JSON.parse(localStorage.getItem('conferencias') || '[]');
+    return Array.isArray(registros) ? registros : [];
+  } catch {
+    return [];
+  }
+}
+
+export function quantidadeDeRegistrosOffline() {
+  return lerRegistrosOffline().length;
 }
 
 export async function buscarProduto(termo) {
@@ -65,8 +78,21 @@ export async function registrarConferencia(payload) {
   }
 }
 
+export async function listarConferencias({ pagina = 1, status = '' } = {}) {
+  try {
+    const parametros = new URLSearchParams({ pagina: String(pagina), status });
+    const response = await authenticatedFetch(`/api/conferences?${parametros}`, { cache: 'no-store' });
+    if (!response.ok) throw new Error(await mensagemDoErro(response, 'Não foi possível carregar o histórico. Tente novamente.'));
+    const resultado = await response.json();
+    if (!resultado.success || !Array.isArray(resultado.data)) throw new Error('Resposta inválida ao consultar o histórico.');
+    return resultado;
+  } catch (error) {
+    return { error: error.message || 'Não foi possível carregar o histórico.' };
+  }
+}
+
 export async function sincronizarDadosOffline() {
-  const registros = JSON.parse(localStorage.getItem('conferencias') || '[]');
+  const registros = lerRegistrosOffline();
   if (registros.length === 0) return;
 
   console.log(`[Sincronização] Iniciando envio de ${registros.length} registros offline...`);

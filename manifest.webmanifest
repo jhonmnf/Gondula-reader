@@ -3,7 +3,7 @@
   "short_name": "Gôndula Reader",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f4f7f5",
-  "theme_color": "#146c43",
+  "background_color": "#0b0e15",
+  "theme_color": "#a5c6ff",
   "icons": [{ "src": "icone.svg", "sizes": "any", "type": "image/svg+xml" }]
 }
