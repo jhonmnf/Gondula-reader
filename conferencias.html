@@ -35,8 +35,19 @@
               <option value="ausente">Ausente</option>
             </select>
           </div>
+          <div>
+            <label for="filtro-periodo">Período</label>
+            <select id="filtro-periodo" name="periodo" aria-describedby="fuso-historico">
+              <option value="">Todas as datas</option>
+              <option value="hoje">Hoje</option>
+              <option value="ontem">Ontem</option>
+              <option value="7dias">Últimos 7 dias</option>
+              <option value="30dias">Últimos 30 dias</option>
+            </select>
+          </div>
           <button class="botao botao--principal" id="atualizar-historico" type="submit">Atualizar</button>
         </form>
+        <p id="fuso-historico" class="historico__total">Datas no horário de Brasília. Os últimos 7 e 30 dias incluem hoje.</p>
         <p id="mensagem-historico" class="historico__mensagem" role="status" aria-live="polite"></p>
         <p id="total-historico" class="historico__total" hidden></p>
         <ol id="lista-conferencias" class="historico__lista" aria-label="Conferências realizadas"></ol>

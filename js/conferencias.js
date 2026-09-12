@@ -5,6 +5,7 @@ const lista = document.querySelector('#lista-conferencias');
 const mensagem = document.querySelector('#mensagem-historico');
 const total = document.querySelector('#total-historico');
 const filtro = document.querySelector('#filtro-status');
+const periodo = document.querySelector('#filtro-periodo');
 const atualizar = document.querySelector('#atualizar-historico');
 const anterior = document.querySelector('#pagina-anterior');
 const proxima = document.querySelector('#pagina-proxima');
@@ -13,7 +14,7 @@ let paginaAtual = 1;
 let carregando = false;
 
 const rotulos = { correta: '✓ Correta', divergente: '! Divergente', ausente: '⊘ Ausente' };
-const formatadorData = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+const formatadorData = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo' });
 
 function adicionarCampo(container, titulo, valor) {
   const campo = document.createElement('div');
@@ -49,20 +50,20 @@ function exibirRegistros(registros) {
 async function carregar(pagina = 1) {
   if (carregando) return;
   carregando = true;
-  atualizar.disabled = anterior.disabled = proxima.disabled = filtro.disabled = true;
+  atualizar.disabled = anterior.disabled = proxima.disabled = filtro.disabled = periodo.disabled = true;
   lista.setAttribute('aria-busy', 'true');
   mensagem.textContent = 'Carregando conferências…';
   total.hidden = paginacao.hidden = true;
   lista.replaceChildren();
 
   try {
-    const resultado = await listarConferencias({ pagina, status: filtro.value });
+    const resultado = await listarConferencias({ pagina, status: filtro.value, periodo: periodo.value });
     if (resultado.error) throw new Error(resultado.error);
     paginaAtual = resultado.pagina;
     exibirRegistros(resultado.data);
     total.textContent = `${resultado.total} conferência(s) encontrada(s).`;
     total.hidden = false;
-    mensagem.textContent = resultado.data.length ? '' : 'Nenhuma conferência encontrada para este resultado.';
+    mensagem.textContent = resultado.data.length ? '' : 'Nenhuma conferência encontrada para os filtros selecionados.';
     document.querySelector('#pagina-historico').textContent = `Página ${paginaAtual} de ${resultado.paginas}`;
     paginacao.hidden = resultado.paginas <= 1;
     anterior.disabled = paginaAtual <= 1;
@@ -71,7 +72,7 @@ async function carregar(pagina = 1) {
     mensagem.textContent = error.message || 'Não foi possível carregar o histórico. Toque em Atualizar para tentar novamente.';
   } finally {
     carregando = false;
-    atualizar.disabled = filtro.disabled = false;
+    atualizar.disabled = filtro.disabled = periodo.disabled = false;
     lista.setAttribute('aria-busy', 'false');
   }
 }
@@ -81,6 +82,7 @@ document.querySelector('#filtros-historico').addEventListener('submit', evento =
   carregar();
 });
 filtro.addEventListener('change', () => carregar());
+periodo.addEventListener('change', () => carregar());
 anterior.addEventListener('click', () => carregar(paginaAtual - 1));
 proxima.addEventListener('click', () => carregar(paginaAtual + 1));
 

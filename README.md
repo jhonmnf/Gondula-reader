@@ -8,6 +8,8 @@ Use **Ver conferências realizadas** na tela principal ou acesse `conferencias.h
 
 A consulta usa as tabelas existentes `conferences` e `products`, sem exigir alterações no banco. O nome exibido é o cadastro atual do produto; preço e nome históricos não são armazenados na conferência atual.
 
+O filtro de período oferece todas as datas, hoje, ontem, últimos 7 dias e últimos 30 dias. As datas seguem o fuso `America/Sao_Paulo` (horário de Brasília), inclusive na exibição dos registros. Os últimos 7 e 30 dias incluem hoje e usam dias de calendário, não uma janela de horas. Período e resultado podem ser combinados; alterar qualquer filtro retorna à primeira página. A filtragem acontece no Supabase antes da contagem e da paginação.
+
 ## Segurança e configuração
 
 Configure estas variáveis de ambiente na Vercel antes de publicar:

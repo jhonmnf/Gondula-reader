@@ -78,9 +78,9 @@ export async function registrarConferencia(payload) {
   }
 }
 
-export async function listarConferencias({ pagina = 1, status = '' } = {}) {
+export async function listarConferencias({ pagina = 1, status = '', periodo = '' } = {}) {
   try {
-    const parametros = new URLSearchParams({ pagina: String(pagina), status });
+    const parametros = new URLSearchParams({ pagina: String(pagina), status, periodo });
     const response = await authenticatedFetch(`/api/conferences?${parametros}`, { cache: 'no-store' });
     if (!response.ok) throw new Error(await mensagemDoErro(response, 'Não foi possível carregar o histórico. Tente novamente.'));
     const resultado = await response.json();
