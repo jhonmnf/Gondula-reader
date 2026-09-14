@@ -35,16 +35,24 @@
             </div>
           </div>
 
+          <div class="camera__foco">
+            <div data-camera-campo hidden>
+              <label for="selecao-camera-teste">Câmera</label>
+              <select id="selecao-camera-teste" data-camera-selecao></select>
+            </div>
+            <button class="botao botao--texto" type="button" data-camera-refocar disabled>Refocar</button>
+            <p data-camera-status role="status"></p>
+          </div>
           <div class="teste-camera__controles" id="controles-zoom" hidden>
             <label for="controle-zoom">Zoom</label>
             <input id="controle-zoom" type="range" step="0.1" />
             <output id="valor-zoom" for="controle-zoom"></output>
           </div>
 
-          <p class="teste-camera__status" id="status-camera" role="status"></p>
           <dl class="teste-camera__dados" id="dados-camera"></dl>
           <button class="botao botao--texto" id="botao-fechar-teste" type="button">Fechar câmera</button>
         </div>
+        <p class="teste-camera__status" id="status-camera" role="status"></p>
       </section>
     </main>
     <script type="module" src="js/teste-camera.js"></script>

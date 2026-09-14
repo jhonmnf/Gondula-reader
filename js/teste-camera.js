@@ -1,3 +1,6 @@
+import { CameraManager } from './camera.js';
+import { criarControlesFoco } from './camera-controls.js';
+
 const botaoAtivar = document.querySelector('#botao-ativar-camera');
 const botaoFechar = document.querySelector('#botao-fechar-teste');
 const camera = document.querySelector('#camera-teste');
@@ -7,123 +10,90 @@ const dados = document.querySelector('#dados-camera');
 const controlesZoom = document.querySelector('#controles-zoom');
 const controleZoom = document.querySelector('#controle-zoom');
 const valorZoom = document.querySelector('#valor-zoom');
-
-let stream = null;
-let trilha = null;
-
-function exibirStatus(mensagem) {
-  status.textContent = mensagem;
-}
+const gerenciador = new CameraManager(null, video);
+const controlesFoco = criarControlesFoco(gerenciador, camera, abrirCamera, exibirDados);
 
 function exibirDados() {
+  const trilha = gerenciador.obterTrilha();
   const configuracao = trilha?.getSettings?.() || {};
   const capacidades = trilha?.getCapabilities?.() || {};
-  const foco = capacidades.focusMode?.includes('continuous') ? 'contínuo disponível' : 'controlado pelo aparelho';
-  const zoom = capacidades.zoom ? `${capacidades.zoom.min}× a ${capacidades.zoom.max}×` : 'não disponível';
-
-  dados.innerHTML = `
-    <div><dt>Resolução</dt><dd>${configuracao.width || '—'} × ${configuracao.height || '—'}</dd></div>
-    <div><dt>Foco</dt><dd>${foco}</dd></div>
-    <div><dt>Zoom</dt><dd>${zoom}</dd></div>
-  `;
-}
-
-async function ativarFocoContinuo() {
-  const capacidades = trilha?.getCapabilities?.() || {};
-  if (!capacidades.focusMode?.includes('continuous')) return false;
-
-  try {
-    await trilha.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
-    return true;
-  } catch {
-    return false;
-  }
+  const nomesFoco = { continuous: 'Contínuo', 'single-shot': 'Pontual', manual: 'Manual', none: 'Sem ajuste' };
+  const itens = {
+    Resolução: `${configuracao.width || '—'} × ${configuracao.height || '—'}`,
+    Foco: nomesFoco[configuracao.focusMode] || 'Não informado',
+    Zoom: capacidades.zoom ? `${capacidades.zoom.min}× a ${capacidades.zoom.max}×` : 'Não disponível'
+  };
+  dados.replaceChildren();
+  Object.entries(itens).forEach(([titulo, valor]) => {
+    const item = document.createElement('div');
+    const dt = document.createElement('dt');
+    const dd = document.createElement('dd');
+    dt.textContent = titulo;
+    dd.textContent = valor;
+    item.append(dt, dd);
+    dados.append(item);
+  });
 }
 
 function configurarZoom() {
-  const capacidades = trilha?.getCapabilities?.() || {};
-  if (!capacidades.zoom) return;
-
-  const { min, max, step = 0.1 } = capacidades.zoom;
-  controleZoom.min = min;
-  controleZoom.max = max;
-  controleZoom.step = step;
-  controleZoom.value = trilha.getSettings().zoom || min;
-  valorZoom.value = `${Number(controleZoom.value).toFixed(1)}×`;
-  controlesZoom.hidden = false;
+  const faixa = gerenciador.obterFaixaDeZoom();
+  controlesZoom.hidden = !faixa;
+  if (!faixa) return;
+  controleZoom.min = faixa.min;
+  controleZoom.max = faixa.max;
+  controleZoom.step = faixa.step;
+  controleZoom.value = faixa.atual;
+  valorZoom.value = `${Number(faixa.atual).toFixed(1)}×`;
 }
 
-async function obterCameraTraseira() {
-  const videoConstraints = {
-    width: { ideal: 1920 },
-    height: { ideal: 1080 },
-    frameRate: { ideal: 30 },
-    resizeMode: { ideal: 'none' }
-  };
-
+async function abrirCamera(deviceId) {
+  botaoAtivar.disabled = true;
+  controlesFoco.definirOcupado(true);
+  controlesZoom.hidden = true;
+  dados.replaceChildren();
+  camera.hidden = false;
   try {
-    return await navigator.mediaDevices.getUserMedia({
-      video: { ...videoConstraints, facingMode: { exact: 'environment' } },
-      audio: false
-    });
-  } catch (erro) {
-    if (!['OverconstrainedError', 'NotFoundError'].includes(erro.name)) throw erro;
-
-    return navigator.mediaDevices.getUserMedia({
-      video: { ...videoConstraints, facingMode: { ideal: 'environment' } },
-      audio: false
-    });
-  }
-}
-
-async function abrirCamera() {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    exibirStatus('Este navegador não oferece acesso à câmera.');
-    return;
-  }
-
-  try {
-    exibirStatus('Solicitando acesso à câmera…');
-    stream = await obterCameraTraseira();
-    trilha = stream.getVideoTracks()[0];
-    video.srcObject = stream;
-    camera.hidden = false;
+    status.textContent = 'Solicitando acesso à câmera…';
+    if (!await gerenciador.abrir(deviceId)) return;
     botaoAtivar.hidden = true;
-    await video.play();
-
-    const focoAtivado = await ativarFocoContinuo();
     configurarZoom();
     exibirDados();
-    exibirStatus(focoAtivado
-      ? 'Foco contínuo ativo. Tente manter 15 a 25 cm de distância e use o zoom, se disponível.'
-      : 'Use boa iluminação e mantenha 15 a 25 cm de distância. O foco é controlado pelo aparelho.');
+    await controlesFoco.atualizar();
+    if (gerenciador.obterTrilha()) {
+      status.textContent = 'Centralize o código. Se continuar embaçado, teste outra câmera da lista e use Refocar quando disponível.';
+    }
   } catch (erro) {
-    exibirStatus(`Não foi possível abrir a câmera: ${erro.message}`);
+    fecharCamera();
+    status.textContent = `Não foi possível abrir a câmera: ${erro.message}`;
+  } finally {
+    botaoAtivar.disabled = false;
+    controlesFoco.definirOcupado(false);
   }
 }
 
 async function atualizarZoom() {
-  const zoom = Number(controleZoom.value);
+  const sessao = gerenciador.sessao;
+  controleZoom.disabled = true;
   try {
-    await trilha.applyConstraints({ advanced: [{ zoom }] });
-    valorZoom.value = `${zoom.toFixed(1)}×`;
+    if (await gerenciador.ajustarZoom(controleZoom.value)) configurarZoom();
   } catch {
-    exibirStatus('O aparelho não aceitou este nível de zoom.');
+    if (sessao === gerenciador.sessao) status.textContent = 'O aparelho não aceitou este nível de zoom.';
+  } finally {
+    controleZoom.disabled = false;
   }
 }
 
 function fecharCamera() {
-  stream?.getTracks().forEach(trilhaAtual => trilhaAtual.stop());
-  stream = null;
-  trilha = null;
-  video.srcObject = null;
+  gerenciador.encerrar();
+  controlesFoco.definirOcupado(false);
   controlesZoom.hidden = true;
-  dados.innerHTML = '';
+  dados.replaceChildren();
   camera.hidden = true;
   botaoAtivar.hidden = false;
+  status.textContent = '';
 }
 
-botaoAtivar.addEventListener('click', abrirCamera);
+botaoAtivar.addEventListener('click', () => abrirCamera());
 botaoFechar.addEventListener('click', fecharCamera);
-controleZoom.addEventListener('input', atualizarZoom);
+controleZoom.addEventListener('change', atualizarZoom);
 window.addEventListener('pagehide', fecharCamera);

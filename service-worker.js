@@ -1,7 +1,7 @@
-const CACHE = 'gondula-reader-v13';
+const CACHE = 'gondula-reader-v14';
 const ARQUIVOS = [
   './', './index.html', './login.html', './teste-camera.html', './styles.css', './app.js', './login.js', './manifest.webmanifest', './icone.svg',
-  './js/api.js', './js/auth.js', './js/camera.js', './js/ui.js', './js/teste-camera.js', './conferencias.html', './js/conferencias.js'
+  './js/api.js', './js/auth.js', './js/camera.js', './js/camera-controls.js', './js/ui.js', './js/teste-camera.js', './conferencias.html', './js/conferencias.js'
 ];
 self.addEventListener('install', evento => evento.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ARQUIVOS))));
 self.addEventListener('activate', evento => evento.waitUntil(caches.keys().then(chaves => Promise.all(chaves.filter(chave => chave !== CACHE).map(chave => caches.delete(chave)))).then(() => self.clients.claim())));

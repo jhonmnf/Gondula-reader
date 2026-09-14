@@ -1,6 +1,7 @@
 import * as API from './js/api.js';
 import * as UI from './js/ui.js';
 import { CameraManager } from './js/camera.js';
+import { criarControlesFoco } from './js/camera-controls.js';
 import * as Auth from './js/auth.js';
 
 if (!(await Auth.isUserLoggedIn())) {
@@ -17,6 +18,7 @@ const camera = new CameraManager(async (codigo) => {
   document.querySelector('#campo-busca').value = codigo;
   await handleBuscarProduto(codigo);
 });
+const controlesFoco = criarControlesFoco(camera, document.querySelector('#camera'), abrirCamera);
 
 async function handleBuscarProduto(termo) {
   UI.mensagem('Consultando servidor...');
@@ -129,30 +131,49 @@ document.querySelector('#formulario-busca').addEventListener('submit', evento =>
   handleBuscarProduto(document.querySelector('#campo-busca').value);
 });
 
-document.querySelector('#botao-camera').addEventListener('click', async () => {
+async function abrirCamera(deviceId) {
+  const botaoAbrir = document.querySelector('#botao-camera');
+  botaoAbrir.disabled = true;
+  controlesFoco.definirOcupado(true);
+  controlesZoomCamera.hidden = true;
   UI.setHidden('#camera', false);
   UI.mensagem('Ativando câmera...');
   try {
-    await camera.abrir();
+    if (!await camera.abrir(deviceId)) return;
     configurarZoomDaCamera();
+    await controlesFoco.atualizar();
+    if (camera.obterTrilha()) UI.mensagem('Câmera ativada.');
   } catch (err) {
     UI.mensagem(err.message, 'erro');
     camera.encerrar();
+    UI.setHidden('#camera', true);
+  } finally {
+    botaoAbrir.disabled = false;
+    controlesFoco.definirOcupado(false);
   }
-});
+}
+
+document.querySelector('#botao-camera').addEventListener('click', () => abrirCamera());
 
 document.querySelector('#botao-fechar-camera').addEventListener('click', () => {
   camera.encerrar();
+  controlesFoco.definirOcupado(false);
   controlesZoomCamera.hidden = true;
   UI.setHidden('#camera', true);
 });
 
+window.addEventListener('pagehide', () => camera.encerrar());
+
 controleZoomCamera.addEventListener('change', async evento => {
+  const sessao = camera.sessao;
+  controleZoomCamera.disabled = true;
   try {
     const zoom = Number(evento.currentTarget.value);
-    if (await camera.ajustarZoom(zoom)) valorZoomCamera.value = `${zoom.toFixed(1)}×`;
+    if (await camera.ajustarZoom(zoom)) configurarZoomDaCamera();
   } catch {
-    UI.mensagem('O aparelho não aceitou este nível de zoom.', 'aviso');
+    if (sessao === camera.sessao) UI.mensagem('O aparelho não aceitou este nível de zoom.', 'aviso');
+  } finally {
+    controleZoomCamera.disabled = false;
   }
 });
 
