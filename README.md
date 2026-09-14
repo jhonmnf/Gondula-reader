@@ -18,6 +18,16 @@ O navegador seleciona a câmera traseira automaticamente. Quando não expõe con
 
 Para testar no Galaxy S22+ com Chrome, acesse `teste-camera.html` por HTTPS e experimente **Refocar**. Compare também com o aplicativo Câmera do celular, na mesma distância e iluminação, para distinguir limitações do navegador de dificuldade óptica. Após uma atualização publicada, feche as abas do aplicativo e abra novamente para ativar o novo cache.
 
+## Leitura por fotografia
+
+O botão **Fotografar código** oferece uma alternativa à leitura ao vivo. No celular, solicita captura de imagem pela câmera traseira com `accept="image/*"` e `capture="environment"`. A interface aberta depende do Android e do navegador; no computador, pode aparecer um seletor de arquivos.
+
+Fotografe uma única etiqueta, com todas as barras nítidas, e confirme a foto. O app lê a imagem localmente com `BarcodeDetector` ou ZXing e consulta o produto pelo código encontrado. A foto não é enviada ao servidor nem armazenada pelo app. A câmera ao vivo é encerrada antes de abrir a captura. Cancelar permite tentar novamente; uma foto sem código mostra uma orientação para repetir ou usar a busca manual.
+
+Fotos acima de 40 MB são recusadas; a imagem é reduzida a até 3072 pixels no maior lado para limitar o custo da leitura. O ZXing tenta as orientações horizontal e vertical. A confirmação de foco e captura nativa exige teste no aparelho físico.
+
+Para testar no Galaxy S22+ com Chrome: atualize o app, feche e reabra, toque em **Fotografar código**, confira a nitidez na câmera, tire e confirme uma foto. Verifique se o produto correto aparece. Teste também cancelar, repetir uma captura e fotografar uma área sem código. **Abrir câmera** mantém a leitura ao vivo disponível. A versão anterior a esta alternativa é o commit `70294c3`; para voltar, reverta o commit que adiciona a fotografia e publique a reversão, preservando mudanças posteriores.
+
 ## Segurança e configuração
 
 Configure estas variáveis de ambiente na Vercel antes de publicar:

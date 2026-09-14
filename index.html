@@ -36,6 +36,9 @@
         <button class="botao botao--principal" id="botao-camera" type="button">
           <span aria-hidden="true">▣</span> Abrir câmera
         </button>
+        <button class="botao botao--foto" id="botao-foto" type="button" aria-describedby="instrucao-foto">Fotografar código</button>
+        <input id="arquivo-foto" type="file" accept="image/*" capture="environment" hidden />
+        <p class="leitura__instrucao-foto" id="instrucao-foto">Use a câmera do celular: fotografe uma etiqueta com as barras nítidas e confirme a foto para buscar o produto.</p>
         <div class="camera" id="camera" hidden>
           <div class="camera__viewport">
             <video id="video" playsinline autoplay muted></video>

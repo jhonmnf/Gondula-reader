@@ -2,6 +2,7 @@ import * as API from './js/api.js';
 import * as UI from './js/ui.js';
 import { CameraManager } from './js/camera.js';
 import { criarControlesFoco } from './js/camera-controls.js';
+import { configurarLeituraPorFoto } from './js/foto.js';
 import * as Auth from './js/auth.js';
 
 if (!(await Auth.isUserLoggedIn())) {
@@ -19,6 +20,19 @@ const camera = new CameraManager(async (codigo) => {
   await handleBuscarProduto(codigo);
 });
 const controlesFoco = criarControlesFoco(camera, document.querySelector('#camera'));
+const botaoFoto = document.querySelector('#botao-foto');
+configurarLeituraPorFoto({
+  botao: botaoFoto,
+  campoFoto: document.querySelector('#arquivo-foto'),
+  botaoCamera: document.querySelector('#botao-camera'),
+  formulario: document.querySelector('#formulario-busca'),
+  fecharCamera,
+  onCodigo: async codigo => {
+    document.querySelector('#campo-busca').value = codigo;
+    await handleBuscarProduto(codigo);
+  },
+  mensagem: UI.mensagem
+});
 
 async function handleBuscarProduto(termo) {
   UI.mensagem('Consultando servidor...');
@@ -134,6 +148,7 @@ document.querySelector('#formulario-busca').addEventListener('submit', evento =>
 async function abrirCamera() {
   const botaoAbrir = document.querySelector('#botao-camera');
   botaoAbrir.disabled = true;
+  botaoFoto.disabled = true;
   controlesFoco.definirOcupado(true);
   controlesZoomCamera.hidden = true;
   UI.setHidden('#camera', false);
@@ -149,18 +164,21 @@ async function abrirCamera() {
     UI.setHidden('#camera', true);
   } finally {
     botaoAbrir.disabled = false;
+    botaoFoto.disabled = false;
     controlesFoco.definirOcupado(false);
   }
 }
 
 document.querySelector('#botao-camera').addEventListener('click', () => abrirCamera());
 
-document.querySelector('#botao-fechar-camera').addEventListener('click', () => {
+function fecharCamera() {
   camera.encerrar();
   controlesFoco.definirOcupado(false);
   controlesZoomCamera.hidden = true;
   UI.setHidden('#camera', true);
-});
+}
+
+document.querySelector('#botao-fechar-camera').addEventListener('click', fecharCamera);
 
 window.addEventListener('pagehide', () => camera.encerrar());
 

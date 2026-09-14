@@ -35,6 +35,8 @@ button:focus-visible,input:focus-visible { outline:3px solid var(--verde); outli
 .camera__foco { padding:14px; text-align:left; }
 .camera__foco .botao { margin-top:8px; min-height:44px; }
 .camera__foco p { margin:8px 0 0; color:var(--muted); line-height:1.4; }
+.botao--foto { width:100%; margin-top:10px; min-height:48px; background:var(--superficie-clara); color:var(--verde); border:1px solid var(--borda); }
+.leitura__instrucao-foto { margin:10px 0 0; color:var(--muted); font-size:.85rem; line-height:1.45; }
 .divisor { display:flex; align-items:center; gap:10px; color:var(--muted); margin:18px 0; font-size:.82rem; }.divisor::before,.divisor::after { content:""; height:1px; background:var(--borda); flex:1; }
 .busca label,.modal label { display:block; font-size:.85rem; font-weight:700; margin-bottom:8px; }.busca__linha { display:flex; gap:8px; }.busca input,.modal input { width:100%; border:1px solid rgba(232,222,255,.22); color:var(--texto); background:rgba(0,0,0,.18); border-radius:15px; padding:13px; outline-color:var(--verde); }.busca input::placeholder { color:#a99dbb; }.busca__linha button { width:52px; border:1px solid rgba(255,255,255,.17); border-radius:15px; background:rgba(198,165,255,.15); color:var(--verde); font-size:23px; font-weight:800; backdrop-filter:blur(12px); }
 .login__senha-label { margin-top:1rem; }.login__entrar { margin-top:2rem; }.login__erro { margin-top:1rem; text-align:center; }
