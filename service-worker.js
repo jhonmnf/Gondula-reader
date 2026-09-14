@@ -1,4 +1,4 @@
-const CACHE = 'gondula-reader-v14';
+const CACHE = 'gondula-reader-v15';
 const ARQUIVOS = [
   './', './index.html', './login.html', './teste-camera.html', './styles.css', './app.js', './login.js', './manifest.webmanifest', './icone.svg',
   './js/api.js', './js/auth.js', './js/camera.js', './js/camera-controls.js', './js/ui.js', './js/teste-camera.js', './conferencias.html', './js/conferencias.js'

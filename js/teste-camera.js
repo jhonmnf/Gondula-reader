@@ -11,7 +11,7 @@ const controlesZoom = document.querySelector('#controles-zoom');
 const controleZoom = document.querySelector('#controle-zoom');
 const valorZoom = document.querySelector('#valor-zoom');
 const gerenciador = new CameraManager(null, video);
-const controlesFoco = criarControlesFoco(gerenciador, camera, abrirCamera, exibirDados);
+const controlesFoco = criarControlesFoco(gerenciador, camera, exibirDados);
 
 function exibirDados() {
   const trilha = gerenciador.obterTrilha();
@@ -46,7 +46,7 @@ function configurarZoom() {
   valorZoom.value = `${Number(faixa.atual).toFixed(1)}×`;
 }
 
-async function abrirCamera(deviceId) {
+async function abrirCamera() {
   botaoAtivar.disabled = true;
   controlesFoco.definirOcupado(true);
   controlesZoom.hidden = true;
@@ -54,13 +54,13 @@ async function abrirCamera(deviceId) {
   camera.hidden = false;
   try {
     status.textContent = 'Solicitando acesso à câmera…';
-    if (!await gerenciador.abrir(deviceId)) return;
+    if (!await gerenciador.abrir()) return;
     botaoAtivar.hidden = true;
     configurarZoom();
     exibirDados();
-    await controlesFoco.atualizar();
+    controlesFoco.atualizar();
     if (gerenciador.obterTrilha()) {
-      status.textContent = 'Centralize o código. Se continuar embaçado, teste outra câmera da lista e use Refocar quando disponível.';
+      status.textContent = 'Centralize o código e use Refocar quando disponível.';
     }
   } catch (erro) {
     fecharCamera();

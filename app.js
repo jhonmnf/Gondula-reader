@@ -18,7 +18,7 @@ const camera = new CameraManager(async (codigo) => {
   document.querySelector('#campo-busca').value = codigo;
   await handleBuscarProduto(codigo);
 });
-const controlesFoco = criarControlesFoco(camera, document.querySelector('#camera'), abrirCamera);
+const controlesFoco = criarControlesFoco(camera, document.querySelector('#camera'));
 
 async function handleBuscarProduto(termo) {
   UI.mensagem('Consultando servidor...');
@@ -131,7 +131,7 @@ document.querySelector('#formulario-busca').addEventListener('submit', evento =>
   handleBuscarProduto(document.querySelector('#campo-busca').value);
 });
 
-async function abrirCamera(deviceId) {
+async function abrirCamera() {
   const botaoAbrir = document.querySelector('#botao-camera');
   botaoAbrir.disabled = true;
   controlesFoco.definirOcupado(true);
@@ -139,9 +139,9 @@ async function abrirCamera(deviceId) {
   UI.setHidden('#camera', false);
   UI.mensagem('Ativando câmera...');
   try {
-    if (!await camera.abrir(deviceId)) return;
+    if (!await camera.abrir()) return;
     configurarZoomDaCamera();
-    await controlesFoco.atualizar();
+    controlesFoco.atualizar();
     if (camera.obterTrilha()) UI.mensagem('Câmera ativada.');
   } catch (err) {
     UI.mensagem(err.message, 'erro');

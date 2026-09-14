@@ -12,7 +12,7 @@ export class CameraManager {
     this.statusFoco = '';
   }
 
-  async abrir(deviceId) {
+  async abrir() {
     if (!navigator.mediaDevices?.getUserMedia) {
       throw new Error('Câmera não suportada neste navegador.');
     }
@@ -21,7 +21,7 @@ export class CameraManager {
     const sessao = this.sessao;
     const video = this.video;
     try {
-      const stream = await this.obterCameraParaLeitura(deviceId);
+      const stream = await this.obterCameraParaLeitura();
       if (sessao !== this.sessao) {
         stream.getTracks().forEach(trilha => trilha.stop());
         return false;
@@ -51,20 +51,13 @@ export class CameraManager {
     }
   }
 
-  async obterCameraParaLeitura(deviceId) {
+  async obterCameraParaLeitura() {
     const video = {
       width: { ideal: 1920 },
       height: { ideal: 1080 },
       frameRate: { ideal: 30 },
       resizeMode: { ideal: 'none' }
     };
-
-    if (deviceId) {
-      return navigator.mediaDevices.getUserMedia({
-        video: { ...video, deviceId: { exact: deviceId } },
-        audio: false
-      });
-    }
 
     try {
       return await navigator.mediaDevices.getUserMedia({
@@ -83,16 +76,6 @@ export class CameraManager {
 
   obterTrilha() {
     return this.streamCamera?.getVideoTracks()[0];
-  }
-
-  async listarCameras() {
-    if (!navigator.mediaDevices?.enumerateDevices) return [];
-    try {
-      const dispositivos = await navigator.mediaDevices.enumerateDevices();
-      return dispositivos.filter(dispositivo => dispositivo.kind === 'videoinput' && dispositivo.deviceId);
-    } catch {
-      return [];
-    }
   }
 
   podeRefocar() {
@@ -121,8 +104,8 @@ export class CameraManager {
     const preferencia = refocar ? ['single-shot', 'continuous'] : ['continuous', 'single-shot'];
     const disponiveis = preferencia.filter(modo => modos.includes(modo));
     this.statusFoco = disponiveis.length
-      ? 'Não foi possível ajustar o foco. Tente outra câmera.'
-      : 'O navegador não oferece controle de foco nesta câmera. Tente outra câmera.';
+      ? 'Não foi possível ajustar o foco pelo navegador.'
+      : 'O navegador não oferece controle de foco nesta câmera.';
 
     for (const focusMode of disponiveis) {
       try {

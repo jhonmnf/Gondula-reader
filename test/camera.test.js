@@ -116,7 +116,7 @@ test('serializa ajustes simultâneos sem perder foco ou zoom', async () => {
   assert.equal(trilha.getSettings().zoom, 4);
 });
 
-test('troca a câmera pelo identificador exato e libera a anterior', async () => {
+test('reabre a câmera traseira automaticamente e libera a sessão anterior', async () => {
   const primeira = criarTrilha();
   const segunda = criarTrilha(['continuous'], 'outra');
   let constraints;
@@ -126,21 +126,10 @@ test('troca a câmera pelo identificador exato e libera a anterior', async () =>
     return criarStream(segunda);
   } });
   camera.streamCamera = criarStream(primeira);
-  assert.equal(await camera.abrir('outra'), true);
-  assert.equal(constraints.video.deviceId.exact, 'outra');
-  assert.equal(constraints.video.facingMode, undefined);
+  assert.equal(await camera.abrir(), true);
+  assert.equal(constraints.video.deviceId, undefined);
+  assert.equal(constraints.video.facingMode.exact, 'environment');
   assert.equal(camera.obterTrilha(), segunda);
-});
-
-test('não troca silenciosamente de lente quando a selecionada falha', async () => {
-  let chamadas = 0;
-  const camera = preparar({ getUserMedia: async () => {
-    chamadas++;
-    throw Object.assign(new Error('Câmera indisponível'), { name: 'OverconstrainedError' });
-  } });
-  await assert.rejects(camera.abrir('removida'), /indisponível/);
-  assert.equal(chamadas, 1);
-  assert.equal(camera.streamCamera, null);
 });
 
 test('mantém alternativa de câmera traseira sem repetir pedido de permissão negada', async () => {
@@ -182,20 +171,6 @@ test('falha no vídeo libera a câmera para uma nova tentativa', async () => {
   await assert.rejects(camera.abrir(), /Erro de vídeo/);
   assert.equal(trilha.encerrada, true);
   assert.equal(camera.video.srcObject, null);
-});
-
-test('lista somente câmeras selecionáveis e tolera enumeração indisponível', async () => {
-  const camera = preparar({ enumerateDevices: async () => [
-    { kind: 'videoinput', deviceId: 'traseira' },
-    { kind: 'videoinput', deviceId: '' },
-    { kind: 'audioinput', deviceId: 'microfone' }
-  ] });
-  const cameras = await camera.listarCameras();
-  assert.equal(cameras.length, 1);
-  assert.equal(cameras[0].deviceId, 'traseira');
-  assert.equal((await preparar().listarCameras()).length, 0);
-  const falha = preparar({ enumerateDevices: async () => { throw new Error(); } });
-  assert.equal((await falha.listarCameras()).length, 0);
 });
 
 test('descarta leitura pendente da câmera anterior depois da troca', async () => {
