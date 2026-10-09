@@ -2,6 +2,24 @@
 
 Aplicação web para conferir etiquetas de gôndola por câmera ou busca manual.
 
+[Aplicação publicada](https://gondula-reader.vercel.app)
+
+## Visão geral
+
+- Leitura de códigos pela câmera ou por fotografia.
+- Consulta manual de produtos.
+- Histórico de conferências com filtros.
+- Autenticação administrativa e integração com Supabase.
+
+## Estrutura do projeto
+
+- `index.html`, `login.html` e `conferencias.html`: páginas da aplicação.
+- `js/`: módulos de câmera, fotografia, autenticação, API e interface.
+- `api/`: funções de servidor e bibliotecas auxiliares.
+- `test/`: testes de autenticação, validação, conferências, câmera e fotografia.
+- `vercel.json`: configuração de publicação e cabeçalhos.
+- `.env.example`: nomes das variáveis necessárias, sem credenciais.
+
 ## Histórico de conferências
 
 Use **Ver conferências realizadas** na tela principal ou acesse `conferencias.html` após fazer login. O histórico consulta os registros sincronizados no Supabase, com filtro por resultado e páginas de 20 registros, ordenados pela data mais recente. Registros offline aparecem quando forem enviados ao servidor.
@@ -42,8 +60,13 @@ Use o arquivo `.env.example` apenas como referência. Não crie ou envie credenc
 
 ## Desenvolvimento
 
+Instale as dependências usando o arquivo de lock:
+
 ```bash
+npm ci
 npm test
 ```
+
+O projeto não possui script `dev` ou `build` no `package.json`. As funções em `api/` usam o ambiente de execução da Vercel; abrir apenas o HTML não disponibiliza essas rotas.
 
 As rotas em `api/` exigem uma sessão administrativa assinada. A câmera utiliza o `BarcodeDetector` nativo quando disponível e ZXing como alternativa.
